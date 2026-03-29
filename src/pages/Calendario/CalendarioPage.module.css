@@ -1,0 +1,42 @@
+.calendarPage { padding: 0; }
+
+.controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.monthNav { display: flex; align-items: center; gap: 8px; }
+.navBtn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--cor-borda); background: var(--cor-card); color: var(--cor-texto); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.navBtn:hover { background: var(--cor-fundo); }
+.monthLabel { font-size: 16px; font-weight: 600; min-width: 180px; text-align: center; color: var(--cor-texto); }
+.filterGroup { display: flex; gap: 6px; margin-left: auto; }
+.filterBtn { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--cor-borda); background: var(--cor-card); color: var(--cor-texto-secundario); cursor: pointer; }
+.filterBtnActive { background: var(--cor-primaria); color: #fff; border-color: var(--cor-primaria); }
+
+.calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--cor-borda); border: 1px solid var(--cor-borda); border-radius: 10px; overflow: hidden; }
+.dayHeader { background: var(--cor-card); padding: 8px; text-align: center; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--cor-texto-secundario); }
+.dayCell { background: var(--cor-card); min-height: 100px; padding: 6px; cursor: pointer; transition: background 0.15s; position: relative; }
+.dayCell:hover { background: var(--cor-fundo); }
+.dayCellOther { opacity: 0.4; }
+.dayCellToday { background: color-mix(in srgb, var(--cor-primaria) 8%, var(--cor-card)); }
+.dayNumber { font-size: 12px; font-weight: 500; color: var(--cor-texto); margin-bottom: 4px; }
+.dayNumberToday { background: var(--cor-primaria); color: #fff; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.eventList { display: flex; flex-direction: column; gap: 2px; }
+.event { padding: 2px 5px; border-radius: 4px; font-size: 10px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.eventOS { background: #dbeafe; color: #1e40af; }
+.eventPlano { background: #dcfce7; color: #166534; }
+.eventVencimento { background: #fef3c7; color: #92400e; }
+.eventEscala { background: #ede9fe; color: #6d28d9; }
+.more { font-size: 10px; color: var(--cor-texto-secundario); padding: 1px 4px; }
+
+.legend { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+.legendItem { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--cor-texto-secundario); }
+.legendDot { width: 10px; height: 10px; border-radius: 3px; }
+
+.detailModal { }
+.detailTitle { font-size: 14px; font-weight: 600; margin-bottom: 4px; color: var(--cor-texto); }
+.detailMeta { font-size: 12px; color: var(--cor-texto-secundario); margin-bottom: 2px; }
+.detailList { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.detailItem { padding: 10px; border-radius: 8px; border: 1px solid var(--cor-borda); }
+
+@media (max-width: 768px) {
+  .dayCell { min-height: 60px; padding: 4px; }
+  .event { font-size: 9px; }
+  .filterGroup { margin-left: 0; }
+}

@@ -1,0 +1,128 @@
+﻿services:
+  # ── PostgreSQL ──
+  postgres:
+    image: postgres:16-alpine
+    container_name: appsindico-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: appsindico
+      POSTGRES_USER: appsindico
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD env var is required}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./server/src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - coolify
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appsindico"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API Backend ──
+  appsindico-api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: appsindico-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: appsindico
+      DB_USER: appsindico
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD env var is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET env var is required}
+      CORS_ORIGIN: https://appsindico.com.br
+    volumes:
+      - uploads:/app/uploads
+    networks:
+      - coolify
+    labels:
+      - "traefik.enable=false"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3001/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Frontend Nginx ──
+  appsindico-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: appsindico-app
+    restart: unless-stopped
+    depends_on:
+      - appsindico-api
+    networks:
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      # HTTPS
+      - "traefik.http.routers.appsindico-https.rule=Host(`appsindico.com.br`) || Host(`www.appsindico.com.br`)"
+      - "traefik.http.routers.appsindico-https.entrypoints=https"
+      - "traefik.http.routers.appsindico-https.tls.certresolver=letsencrypt"
+      - "traefik.http.services.appsindico.loadbalancer.server.port=80"
+      - "traefik.http.routers.appsindico-https.priority=1"
+      # HTTP → HTTPS redirect
+      - "traefik.http.routers.appsindico-http.rule=Host(`appsindico.com.br`) || Host(`www.appsindico.com.br`)"
+      - "traefik.http.routers.appsindico-http.entrypoints=http"
+      - "traefik.http.routers.appsindico-http.middlewares=appsindico-redirect-https"
+      - "traefik.http.middlewares.appsindico-redirect-https.redirectscheme.scheme=https"
+      # www → raiz redirect
+      - "traefik.http.routers.appsindico-www.rule=Host(`www.appsindico.com.br`)"
+      - "traefik.http.routers.appsindico-www.entrypoints=https"
+      - "traefik.http.routers.appsindico-www.tls=true"
+      - "traefik.http.routers.appsindico-www.middlewares=appsindico-redirect-www"
+      - "traefik.http.middlewares.appsindico-redirect-www.redirectregex.regex=^https://www\\.appsindico\\.com\\.br/(.*)"
+      - "traefik.http.middlewares.appsindico-redirect-www.redirectregex.replacement=https://appsindico.com.br/$${1}"
+      - "traefik.http.middlewares.appsindico-redirect-www.redirectregex.permanent=true"
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t 2>/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # ── Backup automático ──
+  appsindico-backup:
+    image: postgres:16-alpine
+    container_name: appsindico-backup
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGDATABASE: appsindico
+      PGUSER: appsindico
+      PGPASSWORD: ${DB_PASSWORD:?DB_PASSWORD env var is required}
+      PGHOST: postgres
+      PGPORT: "5432"
+    volumes:
+      - backups:/var/backups/appsindico
+    networks:
+      - coolify
+    entrypoint: >
+      sh -c "while true; do
+        TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+        echo \"[$$(date)] Iniciando backup...\";
+        pg_dump --no-owner --no-privileges | gzip > /var/backups/appsindico/appsindico_$$TIMESTAMP.sql.gz;
+        find /var/backups/appsindico -name 'appsindico_*.sql.gz' -mtime +30 -delete;
+        echo \"[$$(date)] Backup concluído.\";
+        sleep 86400;
+      done"
+
+volumes:
+  pgdata:
+  uploads:
+  backups:
+
+networks:
+  coolify:
+    external: true

@@ -4,6 +4,10 @@ import pool, { queryOne, query } from '../db/database.js';
 import { generatePortalToken, portalAuthMiddleware, PortalRequest } from '../middleware/portalAuth.js';
 import { checkRateLimit, recordLoginAttempt, auditLog } from '../middleware/helpers.js';
 
+function isSenhaForte(s: string): boolean {
+  return typeof s === 'string' && s.length >= 8 && /[A-Za-z]/.test(s) && /\d/.test(s);
+}
+
 const router = Router();
 
 // ════════════════════════════════════════════
@@ -86,18 +90,35 @@ router.post('/primeiro-acesso', async (req, res: Response) => {
       res.status(400).json({ error: 'Token e senha são obrigatórios' });
       return;
     }
-    if (senha.length < 6) {
-      res.status(400).json({ error: 'Senha deve ter pelo menos 6 caracteres' });
+    if (!isSenhaForte(senha)) {
+      res.status(400).json({ error: 'Senha fraca: mínimo 8 caracteres, com letra e número' });
+      return;
+    }
+
+    const ip = req.ip || req.socket.remoteAddress || '';
+    const { blocked } = await checkRateLimit(`primeiro-acesso:${token.slice(0, 12)}`, ip);
+    if (blocked) {
+      res.status(429).json({ error: 'Muitas tentativas. Tente novamente em 15 minutos.' });
       return;
     }
 
     const morador = await queryOne(
-      'SELECT id, nome, email, condominio_id, ativo FROM moradores WHERE token_acesso = $1',
+      `SELECT id, nome, email, condominio_id, ativo, senha,
+              token_acesso_expira_em
+       FROM moradores WHERE token_acesso = $1`,
       [token]
     );
 
     if (!morador) {
       res.status(404).json({ error: 'Token inválido ou expirado' });
+      return;
+    }
+    if (morador.senha) {
+      res.status(409).json({ error: 'Token já utilizado. Use a opção de login normal ou redefinição de senha.' });
+      return;
+    }
+    if (morador.token_acesso_expira_em && new Date(morador.token_acesso_expira_em) < new Date()) {
+      res.status(410).json({ error: 'Token expirado. Solicite um novo ao síndico.' });
       return;
     }
     if (!morador.ativo) {
@@ -177,8 +198,8 @@ router.put('/senha', async (req: PortalRequest, res: Response) => {
       res.status(400).json({ error: 'Senha atual e nova senha são obrigatórias' });
       return;
     }
-    if (nova_senha.length < 6) {
-      res.status(400).json({ error: 'Nova senha deve ter pelo menos 6 caracteres' });
+    if (!isSenhaForte(nova_senha)) {
+      res.status(400).json({ error: 'Senha fraca: mínimo 8 caracteres, com letra e número' });
       return;
     }
 

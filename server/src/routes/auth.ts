@@ -172,8 +172,8 @@ router.post('/self-register', async (req, res: Response) => {
       res.status(400).json({ error: 'Email, senha e nome são obrigatórios' });
       return;
     }
-    if (senha.length < 6) {
-      res.status(400).json({ error: 'A senha deve ter no mínimo 6 caracteres' });
+    if (typeof senha !== 'string' || senha.length < 8 || !/[A-Za-z]/.test(senha) || !/\d/.test(senha)) {
+      res.status(400).json({ error: 'A senha deve ter no mínimo 8 caracteres, com letra e número' });
       return;
     }
     if (!perfil || !['sindico', 'administradora'].includes(perfil)) {
@@ -295,8 +295,8 @@ router.post('/reset-password', async (req, res: Response) => {
     res.status(400).json({ error: 'Token e nova senha são obrigatórios' });
     return;
   }
-  if (novaSenha.length < 6) {
-    res.status(400).json({ error: 'A senha deve ter no mínimo 6 caracteres' });
+  if (typeof novaSenha !== 'string' || novaSenha.length < 8 || !/[A-Za-z]/.test(novaSenha) || !/\d/.test(novaSenha)) {
+    res.status(400).json({ error: 'A senha deve ter no mínimo 8 caracteres, com letra e número' });
     return;
   }
 

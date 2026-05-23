@@ -6,9 +6,15 @@ import { Eye, EyeOff, Mail, Lock, MessageCircle, UserPlus } from 'lucide-react';
 import logoImg from '../../assets/logo.png';
 import styles from './Auth.module.css';
 
+const REMEMBER_KEY = 'app_sindico_remember';
+
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const lembrado = (() => {
+    try { return JSON.parse(localStorage.getItem(REMEMBER_KEY) || 'null'); } catch { return null; }
+  })();
+  const [email, setEmail] = useState(lembrado?.email || '');
+  const [senha, setSenha] = useState(lembrado?.senha || '');
+  const [lembrar, setLembrar] = useState(!!lembrado);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState('');
@@ -34,6 +40,11 @@ const LoginPage: React.FC = () => {
     setErro('');
     try {
       await login(email, senha);
+      if (lembrar) {
+        localStorage.setItem(REMEMBER_KEY, JSON.stringify({ email, senha }));
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
       navigate('/dashboard');
     } catch (err: any) {
       const msg = err.message || 'Erro ao fazer login.';
@@ -129,6 +140,18 @@ const LoginPage: React.FC = () => {
                   {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+            </div>
+
+            <div className={styles.forgotRow} style={{ justifyContent: 'flex-start' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>
+                <input
+                  type="checkbox"
+                  checked={lembrar}
+                  onChange={e => setLembrar(e.target.checked)}
+                  style={{ width: 16, height: 16, cursor: 'pointer' }}
+                />
+                Lembrar e-mail e senha
+              </label>
             </div>
 
             <button type="submit" className={styles.submitBtn} disabled={carregando}>

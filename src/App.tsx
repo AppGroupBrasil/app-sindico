@@ -159,7 +159,7 @@ const App: React.FC = () => {
         <Route path="relatorios" element={<RoleGuard minRole={2}><RelatoriosPage /></RoleGuard>} />
         <Route path="permissoes" element={<RoleGuard minRole={3}><PermissoesPage /></RoleGuard>} />
         <Route path="qrcode" element={<RoleGuard minRole={2}><QRCodePage /></RoleGuard>} />
-        <Route path="leitor-qrcode" element={<LeitorQRCodePage />} />
+        <Route path="leitor-qrcode" element={<RoleGuard minRole={1}><LeitorQRCodePage /></RoleGuard>} />
         <Route path="mapa-calor" element={<RoleGuard minRole={3}><MapaCalorPage /></RoleGuard>} />
         <Route path="tarefas" element={<TarefasPage />} />
         <Route path="roteiros" element={<RoteiroExecucaoPage />} />

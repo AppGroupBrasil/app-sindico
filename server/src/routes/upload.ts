@@ -4,7 +4,7 @@ import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { AuthRequest } from '../middleware/auth.js';
+import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads');
@@ -33,6 +33,7 @@ const upload = multer({
 });
 
 const router = Router();
+router.use(authMiddleware);
 
 // POST /api/upload/image
 router.post('/image', upload.single('file'), async (req: AuthRequest, res: Response) => {

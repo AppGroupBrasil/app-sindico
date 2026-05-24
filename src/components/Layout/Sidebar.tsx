@@ -26,6 +26,8 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
+  { id: 'sindico', label: 'Painel do Síndico', icon: <Crown size={20} />, rota: '/sindico', minRole: 3, simples: true },
+  { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, rota: '/dashboard', minRole: 1, simples: true },
   { id: 'vencimentos', label: 'Agenda de Vencimentos', icon: <CalendarClock size={20} />, rota: '/vencimentos', minRole: 2, simples: true },
   { id: 'condominios', label: 'Cadastro de Condomínios', icon: <Building2 size={20} />, rota: '/condominios', minRole: 2, simples: true },
   { id: 'moradores', label: 'Cadastro de Moradores', icon: <Contact size={20} />, rota: '/moradores', minRole: 2, simples: true },
@@ -37,7 +39,6 @@ const menuItems: MenuItem[] = [
   { id: 'configuracoes', label: 'Configurações', icon: <Settings size={20} />, rota: '/configuracoes', minRole: 1 },
   { id: 'materiais', label: 'Controle de Estoque', icon: <Package size={20} />, rota: '/materiais', minRole: 1 },
   { id: 'qrcode', label: 'Criar QR Code', icon: <QrCode size={20} />, rota: '/qrcode', minRole: 2, simples: true, tooltip: 'Todas as reclamações, ocorrências, urgências e problemas de manutenção enviados pelo QR Code serão direcionados para a aba "Solicitação dos Moradores".' },
-  { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, rota: '/dashboard', minRole: 1, simples: true },
   { id: 'documentos', label: 'Documentação Técnica', icon: <FileText size={20} />, rota: '/documentos', minRole: 2 },
   { id: 'equipamentos', label: 'Equipamentos', icon: <Cog size={20} />, rota: '/equipamentos', minRole: 2 },
   { id: 'escalas', label: 'Escalas', icon: <Calendar size={20} />, rota: '/escalas', minRole: 2 },
@@ -47,7 +48,6 @@ const menuItems: MenuItem[] = [
   { id: 'laudos', label: 'Laudos Obrigatórios', icon: <ShieldCheck size={20} />, rota: '/laudos', minRole: 2 },
   { id: 'leitor-qrcode', label: 'Leitor QR Code', icon: <ScanLine size={20} />, rota: '/leitor-qrcode', minRole: 1 },
   { id: 'ordens', label: 'Ordens de Serviço', icon: <Wrench size={20} />, rota: '/ordens-servico', minRole: 1, simples: true },
-  { id: 'sindico', label: 'Painel do Síndico', icon: <Crown size={20} />, rota: '/sindico', minRole: 3, simples: true },
   { id: 'planos-manutencao', label: 'Planos Preventivos', icon: <CalendarRange size={20} />, rota: '/planos-manutencao', minRole: 2 },
   { id: 'quadro-atividades', label: 'Quadro de Atividades', icon: <Columns3 size={20} />, rota: '/quadro-atividades', minRole: 1, simples: true },
   { id: 'mapa-calor', label: 'Reclamações', icon: <Flame size={20} />, rota: '/mapa-calor', minRole: 3 },

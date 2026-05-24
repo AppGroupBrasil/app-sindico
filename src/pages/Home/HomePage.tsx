@@ -79,13 +79,13 @@ const plans = [
   {
     type: 'sindico',
     name: 'Plano Síndico',
-    price: 99,
+    price: 199,
     features: ['1 condomínio', 'Até 25 categorias', 'Edições ilimitadas', 'QR Code para moradores', 'Classificados', 'Caronas coletivas', 'Módulo de chamados', 'Personalização de cores e layout', 'Cabeçalho premium', 'Suporte por e-mail'],
   },
   {
     type: 'administradora',
     name: 'Plano Administradora',
-    price: 199,
+    price: 350,
     popular: true,
     features: ['Condomínios ilimitados', 'Todas as 25+ categorias', 'Edições ilimitadas', 'QR Code para moradores', 'Classificados e publicidade', 'Caronas coletivas', 'Módulo completo de chamados', 'Personalização total', 'Cabeçalho premium com logo', 'Relatórios e analytics', 'Gestão de síndicos', 'Suporte prioritário'],
   },
@@ -387,30 +387,6 @@ const HomePage: React.FC = () => {
             ))}
           </div>
 
-          <div className={styles.ecoBanner}>
-            <div className={styles.ecoBannerBlob1} />
-            <div className={styles.ecoBannerBlob2} />
-            <div className={styles.ecoBannerContent}>
-              <h2 className={styles.ecoBannerTitle}>
-                Gostou dos nossos sistemas?{' '}
-                <span className={styles.greenText}>Seja nosso sócio</span> e tenha ganhos de até <span className={styles.greenText}>50%</span> em recorrência.
-              </h2>
-              <div className={styles.ecoBenefits}>
-                {ecosystemBenefits.map((b, i) => (
-                  <div key={i} className={`${styles.ecoBenefit} ${i === 0 ? styles.ecoBenefitWide : ''}`}>
-                    <span className={styles.ecoBenefitIcon}>{b.icon}</span>
-                    <p>{b.text}</p>
-                  </div>
-                ))}
-              </div>
-              <a
-                href="mailto:contato@appsindico.com.br?subject=Quero%20ser%20s%C3%B3cio%20APP%20S%C3%8DNDICO"
-                className={styles.btnGreen}
-              >
-                Entre em contato e saiba mais
-              </a>
-            </div>
-          </div>
         </div>
       </section>
 

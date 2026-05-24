@@ -135,7 +135,7 @@ const CadastroPage: React.FC = () => {
               </ul>
               <div className="cadastro-perfil-price">
                 <span className="cadastro-price-currency">R$</span>
-                <span className="cadastro-price-value">99</span>
+                <span className="cadastro-price-value">199</span>
                 <span className="cadastro-price-period">/mês</span>
               </div>
             </button>
@@ -160,7 +160,7 @@ const CadastroPage: React.FC = () => {
               </ul>
               <div className="cadastro-perfil-price">
                 <span className="cadastro-price-currency">R$</span>
-                <span className="cadastro-price-value">199</span>
+                <span className="cadastro-price-value">350</span>
                 <span className="cadastro-price-period">/mês</span>
               </div>
             </button>
@@ -189,7 +189,7 @@ const CadastroPage: React.FC = () => {
           <span className="cadastro-form-header-icon">{isSindico ? <Building2 size={28} /> : <Building size={28} />}</span>
           <div>
             <h2>{isSindico ? 'Cadastro Síndico' : 'Cadastro Administradora'}</h2>
-            <p>{isSindico ? 'Plano Síndico — R$ 99/mês' : 'Plano Administradora — R$ 199/mês'}</p>
+            <p>{isSindico ? 'Plano Síndico — R$ 199/mês' : 'Plano Administradora — R$ 350/mês'}</p>
           </div>
         </div>
 

@@ -753,3 +753,38 @@
 
   .userName, .userRole { color: #ffffff !important; }
 }
+
+.modoMenuBar {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  margin: 8px 8px 4px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(249, 115, 22, 0.08));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+}
+
+.modoMenuBtn {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.modoMenuBtn:hover {
+  color: #ffffff;
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.modoMenuBtnAtivo {
+  color: #ffffff;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}

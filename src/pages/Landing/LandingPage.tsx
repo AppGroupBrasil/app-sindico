@@ -628,18 +628,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ═══ WHATSAPP FLUTUANTE ═══ */}
-      <a
-        href="https://wa.me/5511933284364"
-        target="_blank"
-        rel="noopener noreferrer"
-        className={styles.whatsappBtn}
-        aria-label="Fale conosco pelo WhatsApp"
-      >
-        <MessageCircle size={28} />
-      </a>
-
-      {/* ═══ FOOTER ═══ */}
+{/* ═══ FOOTER ═══ */}
       <footer className={styles.footer}>
         <div className={styles.footerContainer}>
           <div className={styles.footerBrand}>

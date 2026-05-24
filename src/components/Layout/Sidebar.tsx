@@ -77,7 +77,7 @@ const Sidebar: React.FC = () => {
   // --- Modo do menu (simples/completo) ---
   const [modoMenu, setModoMenu] = useState<'simples' | 'completo'>(() => {
     const v = localStorage.getItem(MODO_MENU_KEY);
-    return v === 'simples' ? 'simples' : 'completo';
+    return v === 'completo' ? 'completo' : 'simples';
   });
   const trocarModo = useCallback((modo: 'simples' | 'completo') => {
     setModoMenu(modo);
@@ -320,7 +320,7 @@ const Sidebar: React.FC = () => {
 
         <nav className={styles.nav}>
           {!collapsed && (
-            <div className={styles.modoMenuBar}>
+            <div className={styles.modoMenuBar} style={{ position: 'relative' }}>
               <button
                 className={`${styles.modoMenuBtn} ${modoMenu === 'simples' ? styles.modoMenuBtnAtivo : ''}`}
                 onClick={() => trocarModo('simples')}
@@ -335,6 +335,12 @@ const Sidebar: React.FC = () => {
               >
                 Menu Completo
               </button>
+              <Coachmark
+                id="sidebar-modo-menu"
+                mensagem={<><strong>Menu Simples</strong> mostra só as funções essenciais do dia a dia. <strong>Menu Completo</strong> exibe todas as funções do sistema. Alterne quando quiser.</>}
+                posicao="abaixo"
+                alinhamento="centro"
+              />
             </div>
           )}
           {!collapsed && (

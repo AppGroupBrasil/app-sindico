@@ -48,6 +48,7 @@ async function request<T = any>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache',
     ...(options.headers as Record<string, string> || {}),
   };
 
@@ -276,8 +277,46 @@ export const dashboard = {
     return request<any>(`/dashboard/master-report?${qs.toString()}`);
   },
 };
+export const qrChat = {
+  list: (blocoId: string) => request<any[]>(`/qr-chat/${encodeURIComponent(blocoId)}`),
+  send: (blocoId: string, data: { remetente: 'morador' | 'sindico'; remetenteNome: string; texto?: string; imagem?: string | null }) =>
+    post<any>(`/qr-chat/${encodeURIComponent(blocoId)}`, data),
+};
+
 export const relatorios = {
-  resumo: () => request<any>('/relatorios/resumo'),
+  resumo: (params?: Record<string, string>) => {
+    const qs = params && Object.keys(params).length ? '?' + new URLSearchParams(params).toString() : '';
+    return request<any>(`/relatorios/resumo${qs}`);
+  },
+};
+export const checklistTemplates = {
+  list: () => request<any[]>('/checklist-templates'),
+  create: (data: any) => post('/checklist-templates', data),
+  update: (id: string, data: any) => put(`/checklist-templates/${id}`, data),
+  remove: (id: string) => del(`/checklist-templates/${id}`),
+  usar: (id: string, data?: { condominioId?: string; local?: string; data?: string }) =>
+    post(`/checklist-templates/${id}/usar`, data || {}),
+};
+export const laudos = {
+  tipos: () => request<{ key: string; label: string }[]>('/laudos/tipos'),
+  list: (params?: { condominioId?: string; status?: string; tipo?: string; vencendoEm?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.condominioId) qs.set('condominioId', params.condominioId);
+    if (params?.status) qs.set('status', params.status);
+    if (params?.tipo) qs.set('tipo', params.tipo);
+    if (params?.vencendoEm != null) qs.set('vencendoEm', String(params.vencendoEm));
+    const s = qs.toString();
+    return request<any[]>(`/laudos${s ? '?' + s : ''}`);
+  },
+  resumo: () => request<any>('/laudos/resumo'),
+  get: (id: string) => request<any>(`/laudos/${id}`),
+  create: (data: any) => post('/laudos', data),
+  update: (id: string, data: any) => put(`/laudos/${id}`, data),
+  renovar: (id: string, data: any) => post(`/laudos/${id}/renovar`, data),
+  remove: (id: string) => del(`/laudos/${id}`),
+};
+export const dashboardConsolidado = {
+  get: () => request<any>('/dashboard-consolidado'),
 };
 export const notificacoes = {
   list: () => request<any[]>('/notificacoes'),
@@ -292,11 +331,6 @@ export const perfil = {
   changeSenha: (senhaAtual: string, novaSenha: string) => put('/perfil/senha', { senhaAtual, novaSenha }),
   updateAvatar: (avatarUrl: string) => put('/perfil/avatar', { avatarUrl }),
 };
-export const audit = {
-  list: (page?: number, limit?: number) => request<any>(`/audit?page=${page || 1}&limit=${limit || 50}`),
-  metrics: () => request<any>('/audit/metrics'),
-};
-
 // ── Equipamentos ──
 export const equipamentos = {
   ...crud('/equipamentos'),
@@ -323,28 +357,6 @@ export const planosManutencao = {
   calendario: () => request<any[]>('/planos-manutencao/calendario/proximos'),
 };
 
-// ── Custos ──
-export const custos = {
-  list: (params?: Record<string, string>) => {
-    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request<any>(`/custos${qs}`);
-  },
-  porCondominio: () => request<any[]>('/custos/por-condominio'),
-  porCategoria: () => request<any[]>('/custos/por-categoria'),
-  evolucao: () => request<any[]>('/custos/evolucao'),
-  porEquipamento: () => request<any[]>('/custos/por-equipamento'),
-};
-
-// ── KPIs ──
-export const kpis = {
-  get: (params?: Record<string, string>) => {
-    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request<any>(`/kpis${qs}`);
-  },
-  equipamentos: () => request<any[]>('/kpis/equipamentos'),
-  tendencia: () => request<any[]>('/kpis/tendencia'),
-};
-
 // ── Documentos Técnicos ──
 export const documentos = {
   ...crud('/documentos'),
@@ -359,16 +371,6 @@ export const solicitacoes = {
   responder: (id: string | number, data: { status: string; resposta?: string }) =>
     patch(`/solicitacoes/${id}/responder`, data),
   converterOS: (id: string | number) => patch(`/solicitacoes/${id}/converter-os`, {}),
-};
-
-// ── SLA ──
-export const sla = {
-  configuracoes: () => request<any[]>('/sla/configuracoes'),
-  salvarConfiguracoes: (condominioId: string, configuracoes: any[]) =>
-    put('/sla/configuracoes', { condominioId, configuracoes }),
-  dashboard: () => request<any>('/sla/dashboard'),
-  violacoes: () => request<any[]>('/sla/violacoes'),
-  recalcular: () => patch('/sla/recalcular', {}),
 };
 
 // ── PDF ──
@@ -416,13 +418,6 @@ export const exportar = {
   },
 };
 
-// ── Controle de Ponto ──
-export const ponto = {
-  list: (data?: string) => request<any[]>(`/ponto${data ? `?data=${data}` : ''}`),
-  resumo: (mes?: string) => request<any>(`/ponto/resumo${mes ? `?mes=${mes}` : ''}`),
-  registrar: (data: any) => post('/ponto', data),
-};
-
 // ── Contratos de Fornecedores ──
 export const contratos = {
   ...crud('/contratos'),
@@ -431,23 +426,6 @@ export const contratos = {
     return Array.isArray(res) ? res : res.data ?? [];
   },
   resumo: () => request<any>('/contratos/resumo'),
-};
-
-// ── Orçamentos ──
-export const orcamentos = {
-  list: (params?: Record<string, string>) => {
-    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request<any>(`/orcamentos${qs}`);
-  },
-  get: (id: string) => request<any>(`/orcamentos/${id}`),
-  create: (data: any) => post('/orcamentos', data),
-  update: (id: string, data: any) => put(`/orcamentos/${id}`, data),
-  remove: (id: string) => del(`/orcamentos/${id}`),
-  updateStatus: (id: string, status: string) => patch(`/orcamentos/${id}/status`, { status }),
-  pdf: (id: string) => {
-    const url = `${API_BASE}/orcamentos/${id}/pdf`;
-    window.open(`${url}?token=${authToken}`, '_blank');
-  },
 };
 
 // ── Push Notifications ──

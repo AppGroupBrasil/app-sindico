@@ -16,6 +16,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src/db/migrations ./dist/db/migrations
 
 # Criar diretórios de upload
 RUN mkdir -p uploads/avatars uploads/documentos uploads/fotos uploads/qrcodes \
@@ -27,4 +28,4 @@ USER node
 
 EXPOSE 3001
 
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "node dist/db/migrate.js && node dist/index.js"]

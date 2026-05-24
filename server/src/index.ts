@@ -28,6 +28,9 @@ import geoRoutes from './routes/geolocalizacao.js';
 import comunicadosRoutes from './routes/comunicados.js';
 import moradoresRoutes from './routes/moradores.js';
 import vencimentosRoutes from './routes/vencimentos.js';
+import laudosRoutes from './routes/laudos.js';
+import checklistTemplatesRoutes from './routes/checklistTemplates.js';
+import dashboardConsolidadoRoutes from './routes/dashboardConsolidado.js';
 import quadroRoutes from './routes/quadroAtividades.js';
 import usuariosRoutes from './routes/usuarios.js';
 import configRoutes from './routes/configuracoes.js';
@@ -43,6 +46,7 @@ import fornecedoresRoutes from './routes/fornecedores.js';
 import planosManutencaoRoutes from './routes/planosManutencao.js';
 
 import documentosRoutes from './routes/documentos.js';
+import qrChatRoutes from './routes/qrChat.js';
 import portalMoradorRoutes from './routes/portalMorador.js';
 import solicitacoesRoutes from './routes/solicitacoes.js';
 
@@ -114,6 +118,12 @@ const authLimiter = rateLimit({
 });
 app.use('/api', apiLimiter);
 
+// Desabilita cache em respostas da API (evita 304 servir dados velhos)
+app.use('/api', (_req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
 // ── Rotas públicas ──
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/portal', authLimiter, portalMoradorRoutes);
@@ -148,6 +158,9 @@ protectedRouter.use('/geolocalizacao', geoRoutes);
 protectedRouter.use('/comunicados', comunicadosRoutes);
 protectedRouter.use('/moradores', moradoresRoutes);
 protectedRouter.use('/vencimentos', vencimentosRoutes);
+protectedRouter.use('/laudos', laudosRoutes);
+protectedRouter.use('/checklist-templates', checklistTemplatesRoutes);
+protectedRouter.use('/dashboard-consolidado', dashboardConsolidadoRoutes);
 protectedRouter.use('/quadro-atividades', quadroRoutes);
 protectedRouter.use('/usuarios', usuariosRoutes);
 protectedRouter.use('/configuracoes', configRoutes);
@@ -163,6 +176,7 @@ protectedRouter.use('/fornecedores', fornecedoresRoutes);
 protectedRouter.use('/planos-manutencao', planosManutencaoRoutes);
 
 protectedRouter.use('/documentos', documentosRoutes);
+protectedRouter.use('/qr-chat', qrChatRoutes);
 protectedRouter.use('/solicitacoes', solicitacoesRoutes);
 
 protectedRouter.use('/pdf', pdfRoutes);

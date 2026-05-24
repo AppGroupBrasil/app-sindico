@@ -9,7 +9,7 @@ import { usePagination } from '../../hooks/usePagination';
 import {
   Plus, X, Trash2, Send, Search, Building2, Mail, FileText,
   Megaphone, Clock, Check, AlertCircle, Users, Home, ChevronDown, Paperclip,
-  Eye, EyeOff, ShieldAlert, BarChart3, RefreshCw, ExternalLink
+  Eye, EyeOff, ShieldAlert, BarChart3, RefreshCw, ExternalLink, MessageCircle
 } from 'lucide-react';
 import { useDemo } from '../../contexts/DemoContext';
 import { comunicados as comunicadosApi, moradores as moradoresApi, condominios as condominiosApi } from '../../services/api';
@@ -182,6 +182,52 @@ const ComunicadosPage: React.FC = () => {
     e.target.value = '';
   };
 
+  /* Enviar via WhatsApp para morador selecionado */
+  const enviarWhatsAppMorador = () => {
+    if (!tentarAcao()) return;
+    const mor = moradores.find(m => m.id === destMoradorId);
+    if (!mor) { alert('Selecione um morador.'); return; }
+    if (!titulo.trim()) { alert('Informe o título.'); return; }
+    const numero = String(mor.whatsapp || '').replace(/\D/g, '');
+    if (!numero) { alert('Este morador não possui WhatsApp cadastrado.'); return; }
+    const agora = new Date();
+    const dataHora = agora.toLocaleString('pt-BR');
+    const usuario = obterUsuarioAtual();
+    const texto =
+      `*${tipo === 'aviso' ? 'Aviso' : 'Comunicado'}*\n` +
+      `*Título:* ${titulo.trim()}\n` +
+      `*Destinatário:* ${mor.nome} — Bl.${mor.bloco} Ap.${mor.apartamento}\n` +
+      `*Status:* Enviado\n` +
+      `*Enviado por:* ${usuario}\n` +
+      `*Data/hora:* ${dataHora}` +
+      (mensagem.trim() ? `\n\n${mensagem.trim()}` : '');
+
+    const numeroComDDI = numero.length <= 11 ? `55${numero}` : numero;
+    const url = `https://wa.me/${numeroComDDI}?text=${encodeURIComponent(texto)}`;
+
+    const novo: Comunicado = {
+      id: `com${Date.now()}`,
+      tipo,
+      titulo: titulo.trim(),
+      mensagem: mensagem.trim(),
+      destinatarioTipo: 'morador',
+      condominio: destCond,
+      moradorId: mor.id,
+      moradorNome: mor.nome,
+      emailsEnviados: [],
+      tracking: [{ email: mor.email || `whatsapp:${numeroComDDI}`, nome: mor.nome, status: 'enviado' as StatusEmail, atualizadoEm: agora.toISOString() }],
+      emailHtml: '',
+      assunto: titulo.trim(),
+      criadoEm: agora.toISOString(),
+      enviadoPor: usuario,
+    } as any;
+    comunicadosApi.create(novo as any).then((criado: any) => {
+      setComunicados(prev => [(criado as Comunicado) || novo, ...prev]);
+    }).catch(() => setComunicados(prev => [novo, ...prev]));
+
+    window.open(url, '_blank');
+  };
+
   /* Enviar */
   const enviar = () => {
     if (!tentarAcao()) return;
@@ -287,7 +333,7 @@ const ComunicadosPage: React.FC = () => {
     try {
       await comunicadosApi.remove(id);
       setComunicados(prev => prev.filter(c => c.id !== id));
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
     setConfirmDelete(null);
   };
 
@@ -679,12 +725,24 @@ const ComunicadosPage: React.FC = () => {
                     {destTipo === 'morador' && destCond && (
                       <div className={styles.formGroup}>
                         <label>Morador *</label>
-                        <select value={destMoradorId} onChange={e => setDestMoradorId(e.target.value)}>
-                          <option value="">Selecione o morador...</option>
-                          {moradoresDisponiveis.map(m => (
-                            <option key={m.id} value={m.id}>{m.nome} — Bl.{m.bloco} Ap.{m.apartamento}</option>
-                          ))}
-                        </select>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+                          <select value={destMoradorId} onChange={e => setDestMoradorId(e.target.value)} style={{ flex: 1 }}>
+                            <option value="">Selecione o morador...</option>
+                            {moradoresDisponiveis.map(m => (
+                              <option key={m.id} value={m.id}>{m.nome} — Bl.{m.bloco} Ap.{m.apartamento}</option>
+                            ))}
+                          </select>
+                          {destMoradorId && (
+                            <button
+                              type="button"
+                              onClick={enviarWhatsAppMorador}
+                              title="Enviar via WhatsApp para o morador"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 14px', background: '#25D366', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap' }}
+                            >
+                              <MessageCircle size={16} /> WhatsApp
+                            </button>
+                          )}
+                        </div>
                         {moradoresDisponiveis.length === 0 && <small className={styles.hint}>Nenhum morador cadastrado neste condomínio.</small>}
                       </div>
                     )}

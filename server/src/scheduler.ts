@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { query, queryOne } from './db/database.js';
+import { sendEmail, emailVencimentoAlerta } from './services/email.js';
 
 function gerarProtocolo(): string {
   const now = new Date();
@@ -202,6 +203,125 @@ async function verificarContratos() {
   if (contratos.length > 0) console.log(`[Scheduler] ${contratos.length} contratos próximos do vencimento.`);
 }
 
+/**
+ * Atualiza status dos laudos e envia e-mails de alerta nos marcos
+ * (30, 15, 7, 3, 1 dias antes do vencimento e no dia do vencimento).
+ * Cada combinação (laudo, marco) é enviada no máximo uma vez (laudos_alertas_log).
+ */
+async function processarLaudos() {
+  console.log('[Scheduler] Verificando laudos obrigatórios...');
+
+  // Atualizar status calculado
+  await query(`
+    UPDATE laudos SET status = CASE
+      WHEN status IN ('renovado','cancelado') THEN status
+      WHEN data_vencimento <  CURRENT_DATE THEN 'vencido'
+      WHEN data_vencimento <= CURRENT_DATE + (prazo_alerta_dias || ' days')::interval THEN 'proximo_vencimento'
+      ELSE 'vigente'
+    END
+    WHERE status NOT IN ('renovado','cancelado')
+  `);
+
+  // Marcos de alerta
+  const MARCOS = [30, 15, 7, 3, 1, 0];
+
+  for (const marco of MARCOS) {
+    const laudos = await query<any>(
+      `SELECT l.*, c.nome AS condominio_nome, c.criado_por AS condo_responsavel
+         FROM laudos l
+         LEFT JOIN condominios c ON c.id = l.condominio_id
+        WHERE l.status NOT IN ('renovado','cancelado')
+          AND (l.data_vencimento - CURRENT_DATE) = $1
+          AND l.prazo_alerta_dias >= $1
+          AND NOT EXISTS (
+            SELECT 1 FROM laudos_alertas_log al
+            WHERE al.laudo_id = l.id AND al.dias_restantes = $1
+          )`,
+      [marco]
+    );
+
+    for (const l of laudos) {
+      // Descobrir destinatários: master + admin do condomínio + responsável + síndico
+      const destinatarios = await query<{ email: string }>(
+        `SELECT DISTINCT u.email
+           FROM usuarios u
+          WHERE u.ativo = true AND u.email IS NOT NULL AND (
+            u.role = 'master'
+            OR u.id = $1
+            OR u.condominio_id = $2
+            OR (u.role = 'administrador' AND u.id = (SELECT criado_por FROM condominios WHERE id = $2))
+          )`,
+        [l.condo_responsavel, l.condominio_id]
+      ).catch(() => []);
+
+      const emails = destinatarios.map(d => d.email);
+      if (emails.length === 0) continue;
+
+      const docTitulo = l.titulo || tipoLabelFallback(l.tipo);
+      const dataFmt = new Date(l.data_vencimento).toLocaleDateString('pt-BR');
+      const tpl = await emailVencimentoAlerta(docTitulo, marco, l.condominio_nome || '', dataFmt);
+      tpl.to = emails;
+      const ok = await sendEmail(tpl);
+
+      if (ok) {
+        await query(
+          `INSERT INTO laudos_alertas_log (laudo_id, dias_restantes, destinatarios) VALUES ($1, $2, $3)`,
+          [l.id, marco, emails]
+        );
+        console.log(`[Scheduler/Laudos] Alerta D-${marco} enviado para ${emails.length} destinatário(s) — laudo ${l.id}`);
+      }
+    }
+  }
+}
+
+function tipoLabelFallback(tipo: string): string {
+  const map: Record<string, string> = {
+    avcb: 'AVCB', spda: 'SPDA / Para-raios', elevador: 'Inspeção de Elevador',
+    potabilidade: 'Potabilidade da Água', pmoc: 'PMOC', gas: 'Estanqueidade de Gás',
+    caldeira: 'Caldeira', piscina: 'Análise da Piscina', fachada: 'Inspeção de Fachada',
+    estrutural: 'Inspeção Predial', desinsetizacao: 'Desinsetização',
+    extintores: 'Extintores', outro: 'Laudo',
+  };
+  return map[tipo] || tipo;
+}
+
+// Avisa por e-mail planos de manutenção que se aproximam do vencimento (dias_aviso antes)
+async function avisarManutencoes() {
+  const rows = await query<any>(`
+    SELECT p.id, p.titulo, p.proxima_execucao, p.email_aviso_1, p.email_aviso_2,
+           p.dias_aviso, p.aviso_enviado_em, c.nome AS condominio_nome
+    FROM planos_manutencao p
+    LEFT JOIN condominios c ON c.id = p.condominio_id
+    WHERE p.status = 'ativo'
+      AND p.proxima_execucao IS NOT NULL
+      AND (p.email_aviso_1 IS NOT NULL OR p.email_aviso_2 IS NOT NULL)
+      AND p.proxima_execucao <= CURRENT_DATE + COALESCE(p.dias_aviso, 7) * INTERVAL '1 day'
+      AND (p.aviso_enviado_em IS NULL OR p.aviso_enviado_em < p.proxima_execucao - COALESCE(p.dias_aviso, 7) * INTERVAL '1 day')
+  `);
+  for (const p of rows) {
+    const destinatarios = [p.email_aviso_1, p.email_aviso_2].filter(Boolean) as string[];
+    if (!destinatarios.length) continue;
+    const data = new Date(p.proxima_execucao).toLocaleDateString('pt-BR');
+    const assunto = `Manutenção próxima: ${p.titulo}`;
+    const html = `
+      <h2>Aviso de manutenção</h2>
+      <p><strong>${p.titulo}</strong></p>
+      <p>Condomínio: ${p.condominio_nome || '—'}</p>
+      <p>Próxima execução: <strong>${data}</strong></p>
+      <p>Você está sendo avisado(a) ${p.dias_aviso || 7} dia(s) antes da data prevista.</p>
+    `;
+    try {
+      for (const to of destinatarios) {
+        await sendEmail({ to, subject: assunto, html });
+      }
+      await queryOne(`UPDATE planos_manutencao SET aviso_enviado_em = NOW() WHERE id = $1 RETURNING id`, [p.id]);
+      console.log(`[Scheduler] Aviso manutenção enviado: ${p.titulo} → ${destinatarios.join(', ')}`);
+    } catch (e: any) {
+      console.error(`[Scheduler] Falha aviso manutenção ${p.id}:`, e.message);
+    }
+  }
+}
+
 export function iniciarScheduler() {
   // A cada hora: verificar planos preventivos + SLA
   cron.schedule('0 * * * *', async () => {
@@ -209,9 +329,11 @@ export function iniciarScheduler() {
     try { await atualizarSLA(); } catch (e: any) { console.error('[Scheduler] Erro SLA:', e.message); }
   });
 
-  // Diariamente às 7h: verificar vencimentos
+  // Diariamente às 7h: verificar vencimentos + laudos + avisos manutenção
   cron.schedule('0 7 * * *', async () => {
     try { await verificarVencimentos(); } catch (e: any) { console.error('[Scheduler] Erro vencimentos:', e.message); }
+    try { await processarLaudos(); } catch (e: any) { console.error('[Scheduler] Erro laudos:', e.message); }
+    try { await avisarManutencoes(); } catch (e: any) { console.error('[Scheduler] Erro avisos manutenção:', e.message); }
   });
 
   // Executar uma vez na inicialização
@@ -225,5 +347,5 @@ export function iniciarScheduler() {
     try { await verificarContratos(); } catch (e: any) { console.error('[Scheduler] Erro contratos:', e.message); }
   });
 
-  console.log('[Scheduler] Tarefas agendadas: planos (1h), SLA (1h), vencimentos (7h), contratos (8h)');
+  console.log('[Scheduler] Tarefas agendadas: planos (1h), SLA (1h), vencimentos+laudos (7h), contratos (8h)');
 }

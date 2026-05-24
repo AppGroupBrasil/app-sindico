@@ -146,7 +146,7 @@ const FornecedoresPage: React.FC = () => {
         setFornecedores(prev => [...prev, criado]);
       }
       setShowModal(false);
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const excluir = async (id: string) => {
@@ -155,7 +155,7 @@ const FornecedoresPage: React.FC = () => {
     try {
       await fornecedoresApi.remove(id);
       setFornecedores(prev => prev.filter(f => f.id !== id));
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const abrirAvaliacoes = async (f: any) => {
@@ -179,7 +179,7 @@ const FornecedoresPage: React.FC = () => {
       setFornecedores(prev => prev.map(f => f.id === avalForn.id ? { ...f, avaliacaoMedia: media, totalServicos: (f.totalServicos || 0) + 1 } : f));
       setShowNovaAval(false);
       setAvalForm({ nota: 5, comentario: '' });
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const pag = usePagination(filtrados, { pageSize: 15 });
@@ -283,7 +283,7 @@ const FornecedoresPage: React.FC = () => {
           <Card>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-                <Pie data={chartTipo} dataKey="valor" nameKey="nome" cx="50%" cy="50%" outerRadius={90} label={({ nome, valor }) => `${nome}: ${valor}`}>
+                <Pie data={chartTipo} dataKey="valor" nameKey="nome" cx="50%" cy="50%" outerRadius={90} label={({ nome, valor }: any) => `${nome}: ${valor}`}>
                   {chartTipo.map((_, i) => <Cell key={i} fill={CORES[i % CORES.length]} />)}
                 </Pie>
                 <Tooltip />

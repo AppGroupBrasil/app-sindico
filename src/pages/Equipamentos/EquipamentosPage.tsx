@@ -158,7 +158,7 @@ const EquipamentosPage: React.FC = () => {
         setEquipamentos(prev => [...prev, criado]);
       }
       setShowModal(false);
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const excluir = async (id: string) => {
@@ -167,7 +167,7 @@ const EquipamentosPage: React.FC = () => {
     try {
       await equipamentosApi.remove(id);
       setEquipamentos(prev => prev.filter(e => e.id !== id));
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const abrirHistorico = async (eq: any) => {
@@ -191,7 +191,7 @@ const EquipamentosPage: React.FC = () => {
       setHistorico(prev => [novo, ...prev]);
       setShowHistForm(false);
       setHistForm({ tipo: 'manutencao', descricao: '', dataServico: '', custo: '', fornecedorId: '', tecnico: '', observacoes: '' });
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const pag = usePagination(filtrados, { pageSize: 15 });
@@ -298,7 +298,7 @@ const EquipamentosPage: React.FC = () => {
           <Card>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-                <Pie data={chartCat} dataKey="valor" nameKey="nome" cx="50%" cy="50%" outerRadius={90} label={({ nome, valor }) => `${nome}: ${valor}`}>
+                <Pie data={chartCat} dataKey="valor" nameKey="nome" cx="50%" cy="50%" outerRadius={90} label={({ nome, valor }: any) => `${nome}: ${valor}`}>
                   {chartCat.map((_, i) => <Cell key={i} fill={CORES[i % CORES.length]} />)}
                 </Pie>
                 <Tooltip />

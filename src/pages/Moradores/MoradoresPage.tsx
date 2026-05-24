@@ -32,6 +32,8 @@ interface Morador {
 interface Condominio {
   id: string;
   nome: string;
+  blocos?: number;
+  blocosNomes?: string[];
 }
 
 const PERFIS = ['Proprietário', 'Inquilino', 'Dependente', 'Síndico', 'Funcionário'];
@@ -64,7 +66,7 @@ const MoradoresPage: React.FC = () => {
     Promise.all([moradoresApi.list(), condominiosApi.list()])
       .then(([m, c]) => {
         setMoradores(m as Morador[]);
-        setCondominios(c.map((x: any) => ({ id: x.id, nome: x.nome })));
+        setCondominios(c.map((x: any) => ({ id: x.id, nome: x.nome, blocos: x.blocos, blocosNomes: x.blocosNomes })));
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -92,6 +94,17 @@ const MoradoresPage: React.FC = () => {
 
   const salvar = async () => {
     if (!form.nome.trim() || !form.condominioId) return;
+    const condSel = condominios.find(c => c.nome === form.condominioId || c.id === form.condominioId);
+    const nomesBlocos = condSel?.blocosNomes?.filter(n => n && n.trim()) || [];
+    const temBlocos = nomesBlocos.length > 0 || (condSel?.blocos || 0) > 0;
+    if (!temBlocos) {
+      alert('Não é possível cadastrar o morador: o condomínio selecionado não possui blocos cadastrados. Cadastre os blocos em "Cadastro de Condomínios" primeiro.');
+      return;
+    }
+    if (!form.bloco) {
+      alert('Selecione o bloco do morador.');
+      return;
+    }
     try {
       if (editandoId) {
         const updated = await moradoresApi.update(editandoId, form);
@@ -101,7 +114,7 @@ const MoradoresPage: React.FC = () => {
         setMoradores(prev => [...prev, novo as Morador]);
       }
       fecharModal();
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const excluir = async (id: string) => {
@@ -110,7 +123,7 @@ const MoradoresPage: React.FC = () => {
       await moradoresApi.remove(id);
       setMoradores(prev => prev.filter(m => m.id !== id));
       setConfirmDelete(null);
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const setField = (key: string, value: string) => {
@@ -213,7 +226,7 @@ const MoradoresPage: React.FC = () => {
       }
       setMoradores(prev => [...prev, ...novos]);
       fecharImport();
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   /* Download template */
@@ -428,7 +441,34 @@ const MoradoresPage: React.FC = () => {
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Bloco</label>
-                  <input value={form.bloco} onChange={e => setField('bloco', e.target.value)} placeholder="Ex: A" />
+                  {(() => {
+                    const condSel = condominios.find(c => c.nome === form.condominioId || c.id === form.condominioId);
+                    const nomes = condSel?.blocosNomes?.filter(n => n && n.trim()) || [];
+                    const opcoes = nomes.length > 0
+                      ? nomes
+                      : (condSel?.blocos && condSel.blocos > 0
+                          ? Array.from({ length: condSel.blocos }, (_, i) => String.fromCharCode(65 + i))
+                          : []);
+                    if (!condSel) {
+                      return <input value={form.bloco} disabled placeholder="Selecione o condomínio" />;
+                    }
+                    if (opcoes.length === 0) {
+                      return (
+                        <>
+                          <input value="" disabled placeholder="Nenhum bloco cadastrado" />
+                          <small style={{ color: '#dc2626', fontSize: 11 }}>
+                            Este condomínio não possui blocos cadastrados. Solicite ao síndico que cadastre os blocos em "Cadastro de Condomínios" antes de incluir moradores.
+                          </small>
+                        </>
+                      );
+                    }
+                    return (
+                      <select value={form.bloco} onChange={e => setField('bloco', e.target.value)}>
+                        <option value="">Selecione...</option>
+                        {opcoes.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    );
+                  })()}
                 </div>
                 <div className={styles.formGroup}>
                   <label>Apartamento</label>

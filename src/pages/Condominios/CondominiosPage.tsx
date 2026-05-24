@@ -17,6 +17,7 @@ interface Condominio {
   endereco: string;
   cidade: string;
   blocos: number;
+  blocosNomes?: string[];
   unidades: number;
   sindico: string;
   telefone: string;
@@ -35,7 +36,7 @@ interface Condominio {
 }
 
 const formVazio = (): Omit<Condominio, 'id'> => ({
-  nome: '', endereco: '', cidade: '', blocos: 0, unidades: 0, sindico: '', telefone: '', email: '',
+  nome: '', endereco: '', cidade: '', blocos: 0, blocosNomes: [], unidades: 0, sindico: '', telefone: '', email: '',
   logoUrl: undefined, loginTitulo: undefined, loginSubtitulo: undefined,
 });
 
@@ -64,6 +65,7 @@ const CondominiosPage: React.FC = () => {
         endereco: r.endereco || '',
         cidade: r.cidade || '',
         blocos: r.blocos || 0,
+        blocosNomes: Array.isArray(r.blocosNomes) ? r.blocosNomes : (Array.isArray(r.blocos_nomes) ? r.blocos_nomes : []),
         unidades: r.unidades || 0,
         sindico: r.sindico || '',
         telefone: r.telefone || '',
@@ -106,7 +108,7 @@ const CondominiosPage: React.FC = () => {
   };
 
   const salvar = async () => {
-    if (!form.nome.trim()) return;
+    if (!form.nome.trim()) { alert('Informe o nome do condomínio.'); return; }
     try {
       if (editandoId) {
         await condominiosApi.update(editandoId, form as any);
@@ -115,19 +117,23 @@ const CondominiosPage: React.FC = () => {
         const novo = await condominiosApi.create(form as any);
         setCondominios(prev => [...prev, { ...form, id: (novo as any).id }]);
       }
-    } catch { alert('Erro ao salvar'); }
-    fecharModal();
+      fecharModal();
+    } catch (err: any) {
+      alert('Falha ao salvar condomínio: ' + (err?.message || 'erro desconhecido'));
+      console.error(err);
+    }
   };
 
   const excluir = async (id: string) => {
     if (!tentarAcao()) return;
-    try { await condominiosApi.remove(id); } catch { alert('Erro ao excluir'); }
+    try { await condominiosApi.remove(id); }
+    catch (err: any) { alert('Falha ao excluir: ' + (err?.message || 'erro desconhecido')); console.error(err); }
     setCondominios(prev => prev.filter(c => c.id !== id));
     setConfirmDelete(null);
   };
 
-  const setField = (key: keyof Omit<Condominio, 'id'>, value: string | number) => {
-    setForm(prev => ({ ...prev, [key]: value }));
+  const setField = (key: keyof Omit<Condominio, 'id'>, value: string | number | string[]) => {
+    setForm(prev => ({ ...prev, [key]: value as any }));
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,11 +235,11 @@ const CondominiosPage: React.FC = () => {
         onCompartilhar={() => compartilharConteudo('Condomínios', `Total: ${condominios.length}`)}
         onImprimir={() => imprimirElemento('condominios-content')}
         onGerarPdf={() => gerarPdfDeElemento('condominios-content', 'condominios')}
-        acoes={!isMaster ? (
+        acoes={
           <button className={styles.addBtn} onClick={abrirNovo}>
             <Plus size={18} /> <span>Novo Condomínio</span>
           </button>
-        ) : undefined}
+        }
       />
 
       {/* === MASTER VIEW: Tabela com filtros === */}
@@ -408,11 +414,60 @@ const CondominiosPage: React.FC = () => {
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Blocos</label>
-                  <input type="number" min={0} value={form.blocos || ''} onChange={e => setField('blocos', Number(e.target.value))} />
+                  <input
+                    type="number"
+                    min={0}
+                    value={(form.blocosNomes && form.blocosNomes.length > 0) ? form.blocosNomes.length : (form.blocos || '')}
+                    disabled={!!(form.blocosNomes && form.blocosNomes.length > 0)}
+                    onChange={e => setField('blocos', Number(e.target.value))}
+                  />
+                  <small style={{ color: '#6b7280', fontSize: 11 }}>
+                    {form.blocosNomes && form.blocosNomes.length > 0
+                      ? 'Quantidade definida pelos nomes abaixo'
+                      : 'Apenas número, ou personalize com nomes abaixo'}
+                  </small>
                 </div>
                 <div className={styles.formGroup}>
                   <label>Unidades</label>
                   <input type="number" min={0} value={form.unidades || ''} onChange={e => setField('unidades', Number(e.target.value))} />
+                </div>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Nomes dos blocos (opcional)</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {(form.blocosNomes || []).map((nome, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: 6 }}>
+                      <input
+                        value={nome}
+                        placeholder={`Ex: Bloco Munique`}
+                        onChange={e => {
+                          const arr = [...(form.blocosNomes || [])];
+                          arr[idx] = e.target.value;
+                          setField('blocosNomes', arr);
+                        }}
+                        style={{ flex: 1 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const arr = [...(form.blocosNomes || [])];
+                          arr.splice(idx, 1);
+                          setField('blocosNomes', arr);
+                        }}
+                        style={{ padding: '6px 10px', border: '1px solid #e5e7eb', background: '#fff', borderRadius: 6, cursor: 'pointer' }}
+                        title="Remover"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setField('blocosNomes', [...(form.blocosNomes || []), ''])}
+                    style={{ alignSelf: 'flex-start', padding: '6px 10px', border: '1px dashed #93c5fd', background: '#eff6ff', color: '#1d4ed8', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}
+                  >
+                    <Plus size={14} style={{ verticalAlign: 'middle' }} /> Adicionar bloco com nome
+                  </button>
                 </div>
               </div>
               <div className={styles.formGroup}>

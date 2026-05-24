@@ -67,22 +67,42 @@ const DocumentosPage: React.FC = () => {
 
   const carregar = async () => {
     setLoading(true);
-    try {
-      const [lista, res, conds, eqs] = await Promise.all([
-        docsApi.list() as Promise<DocumentoTecnico[]>,
-        docsApi.resumo() as Promise<ResumoDocumentos>,
-        condominiosApi.list().catch(() => []),
-        equipamentosApi.list().catch(() => []),
-      ]);
-      setDocs(lista);
-      setResumo(res);
-      setCondominiosList(conds as any[]);
-      setEquipamentosList(eqs as any[]);
-    } catch (err) {
-      console.error('Erro ao carregar documentos:', err);
-    } finally {
-      setLoading(false);
+    const [listaRes, resumoRes, condsRes, eqsRes] = await Promise.allSettled([
+      docsApi.list() as Promise<DocumentoTecnico[]>,
+      docsApi.resumo() as Promise<ResumoDocumentos>,
+      condominiosApi.list(),
+      equipamentosApi.list(),
+    ]);
+
+    if (listaRes.status === 'fulfilled') setDocs(listaRes.value);
+    else { console.error('Erro lista documentos:', listaRes.reason); setDocs([]); }
+
+    if (resumoRes.status === 'fulfilled') setResumo(resumoRes.value);
+    else {
+      console.error('Erro resumo documentos:', resumoRes.reason);
+      const docsAtuais = listaRes.status === 'fulfilled' ? listaRes.value : [];
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      const em30 = new Date(hoje); em30.setDate(em30.getDate() + 30);
+      const vencidos = docsAtuais.filter(d => d.dataValidade && new Date(d.dataValidade) < hoje).length;
+      const aVencer30 = docsAtuais.filter(d => d.dataValidade && new Date(d.dataValidade) >= hoje && new Date(d.dataValidade) <= em30).length;
+      const porTipoMap: Record<string, number> = {};
+      docsAtuais.forEach(d => { porTipoMap[d.tipo] = (porTipoMap[d.tipo] || 0) + 1; });
+      setResumo({
+        total: docsAtuais.length,
+        vencidos,
+        aVencer30,
+        porTipo: Object.entries(porTipoMap).map(([tipo, quantidade]) => ({ tipo, quantidade })),
+      } as ResumoDocumentos);
     }
+
+    setCondominiosList(condsRes.status === 'fulfilled' ? (condsRes.value as any[]) : []);
+    setEquipamentosList(eqsRes.status === 'fulfilled' ? (eqsRes.value as any[]) : []);
+
+    if (listaRes.status === 'rejected') {
+      console.warn('[Documentos] Falha ao carregar lista — exibindo página vazia. Detalhes:', (listaRes.reason as any)?.message);
+    }
+
+    setLoading(false);
   };
 
   useEffect(() => { carregar(); }, []);
@@ -118,8 +138,9 @@ const DocumentosPage: React.FC = () => {
         arquivoTamanho: file.size,
         arquivoTipo: file.type,
       }));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro no upload:', err);
+      alert('Falha no upload do arquivo: ' + (err?.message || 'tente novamente'));
     } finally {
       setUploading(false);
     }
@@ -174,8 +195,9 @@ const DocumentosPage: React.FC = () => {
       }
       setShowModal(false);
       carregar();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao salvar:', err);
+      alert('Falha ao salvar documento: ' + (err?.message || 'tente novamente'));
     } finally {
       setSalvando(false);
     }

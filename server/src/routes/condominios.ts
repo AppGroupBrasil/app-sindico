@@ -44,11 +44,13 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 
 // POST /api/condominios
 router.post('/', requireMinRole('administrador'), validate(condominioSchema), async (req: AuthRequest, res: Response) => {
-  const { nome, endereco, cidade, estado, cep, sindico, telefone, email, blocos, unidades } = req.body;
+  const { nome, endereco, cidade, estado, cep, sindico, telefone, email, blocos, unidades, blocos_nomes } = req.body;
+  const nomes: string[] = Array.isArray(blocos_nomes) ? blocos_nomes.map((s: any) => String(s).trim()).filter(Boolean) : [];
+  const qtdBlocos = nomes.length > 0 ? nomes.length : (blocos || 0);
   const row = await queryOne(
-    `INSERT INTO condominios (nome, endereco, cidade, estado, cep, sindico, telefone, email, blocos, unidades, criado_por)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
-    [nome, endereco, cidade, estado, cep, sindico, telefone, email, blocos || 0, unidades || 0, req.user!.id]
+    `INSERT INTO condominios (nome, endereco, cidade, estado, cep, sindico, telefone, email, blocos, blocos_nomes, unidades, criado_por)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+    [nome, endereco, cidade, estado, cep, sindico, telefone, email, qtdBlocos, nomes, unidades || 0, req.user!.id]
   );
   res.status(201).json(row);
 });
@@ -60,12 +62,14 @@ router.put('/:id', requireMinRole('administrador'), async (req: AuthRequest, res
     res.status(403).json({ error: 'Sem acesso a este condomínio' });
     return;
   }
-  const { nome, endereco, cidade, estado, cep, sindico, telefone, email, blocos, unidades } = req.body;
+  const { nome, endereco, cidade, estado, cep, sindico, telefone, email, blocos, unidades, blocos_nomes } = req.body;
+  const nomes: string[] = Array.isArray(blocos_nomes) ? blocos_nomes.map((s: any) => String(s).trim()).filter(Boolean) : [];
+  const qtdBlocos = nomes.length > 0 ? nomes.length : (blocos || 0);
   const row = await queryOne(
     `UPDATE condominios SET nome=$1, endereco=$2, cidade=$3, estado=$4, cep=$5,
-     sindico=$6, telefone=$7, email=$8, blocos=$9, unidades=$10
-     WHERE id=$11 RETURNING *`,
-    [nome, endereco, cidade, estado, cep, sindico, telefone, email, blocos, unidades, req.params.id]
+     sindico=$6, telefone=$7, email=$8, blocos=$9, blocos_nomes=$10, unidades=$11
+     WHERE id=$12 RETURNING *`,
+    [nome, endereco, cidade, estado, cep, sindico, telefone, email, qtdBlocos, nomes, unidades, req.params.id]
   );
   res.json(row);
 });

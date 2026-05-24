@@ -113,7 +113,7 @@ const ReportesPage: React.FC = () => {
       if (detalheModal?.protocolo === protocolo) {
         setDetalheModal({ ...detalheModal, status: novoStatus });
       }
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const formatarData = (iso: string) => {
@@ -128,21 +128,21 @@ const ReportesPage: React.FC = () => {
   return (
     <div id="reportes-content">
       <HowItWorks
-        titulo="Central de Reportes"
-        descricao="Visualize e gerencie todo os problemas reportados nos checklists. Busque por protocolo, status, prioridade ou qualquer informação."
+        titulo="Solicitação dos Moradores"
+        descricao="Solicitações enviadas pelos moradores através do QR Code — reclamações, ocorrências, urgências e problemas de manutenção chegam aqui automaticamente."
         passos={[
-          'Todos os problemas reportados nos checklists aparecem aqui automaticamente',
+          'Todas as solicitações enviadas pelo QR Code aparecem aqui automaticamente',
           'Use a busca inteligente para encontrar por protocolo, item, status ou prioridade',
           'Filtre por status e prioridade usando os filtros rápidos',
-          'Clique em sVers para abrir os detalhes completos do reporte',
+          'Clique em "Ver" para abrir os detalhes completos da solicitação',
           'Atualize o status diretamente pela lista ou pelo modal de detalhes',
         ]}
       />
 
       <PageHeader
-        titulo="Central de Reportes"
-        subtitulo={`${reportes.length} reportes registrados`}
-        onCompartilhar={() => compartilharConteudo('Reportes', 'Central de Reportes')}
+        titulo="Solicitação dos Moradores"
+        subtitulo={`${reportes.length} solicitações registradas`}
+        onCompartilhar={() => compartilharConteudo('Solicitações dos Moradores', 'Solicitações recebidas via QR Code')}
         onImprimir={() => imprimirElemento('reportes-content')}
         onGerarPdf={() => gerarPdfDeElemento('reportes-content', 'reportes')}
       />

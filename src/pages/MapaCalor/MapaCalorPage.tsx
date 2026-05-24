@@ -6,13 +6,15 @@ import { compartilharConteudo, imprimirElemento, gerarPdfDeElemento } from '../.
 import {
   Flame, AlertTriangle, CheckCircle2, Clock, TrendingUp,
   BarChart3, Building2, Users, Filter as FilterIcon,
+  Plus, X, Trash2, Check
 } from 'lucide-react';
+import Modal from '../../components/Common/Modal';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import styles from './MapaCalor.module.css';
-import { reportes as reportesApi } from '../../services/api';
+import { reportes as reportesApi, condominios as condominiosApi } from '../../services/api';
 
 /* ═══════════════════════════════════════
    DADOS MOCK
@@ -73,7 +75,65 @@ const diasAtras = (dataStr: string, dias: number): boolean => {
 ═══════════════════════════════════════ */
 const MapaCalorPage: React.FC = () => {
   const [reclamacoes, setReclamacoes] = useState<Reclamacao[]>([]);
+  const [condominiosCadastrados, setCondominiosCadastrados] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalNova, setModalNova] = useState(false);
+  const formVazio = { tipo: 'Limpeza', condominio: '', bloco: '', usuario: '', status: 'Aberto', prioridade: 'Média', descricao: '' };
+  const [nova, setNova] = useState(formVazio);
+  const [salvando, setSalvando] = useState(false);
+
+  const recarregar = async () => {
+    const data = await reportesApi.list();
+    setReclamacoes((data as any[]).map((r: any, i: number) => ({
+      id: i + 1,
+      _apiId: r.id,
+      tipo: r.tipo || r.categoria || 'Outro',
+      bloco: r.bloco || r.local || 'Geral',
+      condominio: r.condominioNome || r.condominio || '',
+      usuario: r.usuario || r.criadoPorNome || '',
+      status: r.status === 'aberto' ? 'Aberto' : r.status === 'em_analise' || r.status === 'em_andamento' ? 'Em andamento' : r.status === 'resolvido' ? 'Resolvido' : r.status || 'Aberto',
+      prioridade: r.prioridade === 'urgente' ? 'Urgente' : r.prioridade === 'alta' ? 'Alta' : r.prioridade === 'media' ? 'Média' : r.prioridade === 'baixa' ? 'Baixa' : r.prioridade || 'Média',
+      data: r.criadoEm ? new Date(r.criadoEm).toISOString().split('T')[0] : r.data || '',
+    } as any)));
+  };
+
+  const salvarNova = async () => {
+    if (!nova.condominio || !nova.tipo) { alert('Selecione condomínio e tipo.'); return; }
+    setSalvando(true);
+    try {
+      const cond = condominiosCadastrados.find((c: any) => c.nome === nova.condominio);
+      await reportesApi.create({
+        tipo: nova.tipo,
+        categoria: nova.tipo,
+        bloco: nova.bloco,
+        local: nova.bloco,
+        condominioId: cond?.id,
+        descricao: nova.descricao,
+        status: nova.status === 'Aberto' ? 'aberto' : nova.status === 'Em andamento' ? 'em_andamento' : 'resolvido',
+        prioridade: nova.prioridade.toLowerCase() === 'média' ? 'media' : nova.prioridade.toLowerCase(),
+      } as any);
+      setModalNova(false);
+      setNova(formVazio);
+      await recarregar();
+    } catch (err: any) {
+      alert(err?.message || 'Erro ao salvar.');
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const mudarStatus = async (apiId: string, novoStatus: string) => {
+    try {
+      await reportesApi.updateStatus(apiId, novoStatus);
+      await recarregar();
+    } catch (err: any) { alert(err?.message || 'Erro ao atualizar status.'); }
+  };
+
+  const excluir = async (apiId: string) => {
+    if (!confirm('Excluir esta reclamação?')) return;
+    try { await reportesApi.remove(apiId); await recarregar(); }
+    catch (err: any) { alert(err?.message || 'Erro ao excluir.'); }
+  };
   const [periodo, setPeriodo] = useState<'diario' | 'semanal' | 'mensal'>('mensal');
   const [condFiltro, setCondFiltro] = useState('todos');
   const [blocoFiltro, setBlocoFiltro] = useState('todos');
@@ -81,21 +141,34 @@ const MapaCalorPage: React.FC = () => {
   const [prioridadeFiltro, setPrioridadeFiltro] = useState('todos');
 
   useEffect(() => {
-    reportesApi.list().then((data: any[]) => {
-      setReclamacoes(data.map((r: any, i: number) => ({
-        id: i + 1,
-        tipo: r.tipo || r.categoria || 'Outro',
-        bloco: r.bloco || r.local || 'Geral',
-        condominio: r.condominioNome || r.condominio || '',
-        usuario: r.usuario || r.criadoPorNome || '',
-        status: r.status === 'aberto' ? 'Aberto' : r.status === 'em_analise' || r.status === 'em_andamento' ? 'Em andamento' : r.status === 'resolvido' ? 'Resolvido' : r.status || 'Aberto',
-        prioridade: r.prioridade === 'urgente' ? 'Urgente' : r.prioridade === 'alta' ? 'Alta' : r.prioridade === 'media' ? 'Média' : r.prioridade === 'baixa' ? 'Baixa' : r.prioridade || 'Média',
-        data: r.criadoEm ? new Date(r.criadoEm).toISOString().split('T')[0] : r.data || '',
-      })));
-    }).catch(() => {}).finally(() => setLoading(false));
+    condominiosApi.list().then((cs: any[]) => {
+      setCondominiosCadastrados(cs || []);
+    }).catch(() => {});
+
+    recarregar().catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  const condominios = useMemo(() => [...new Set(reclamacoes.map(r => r.condominio))].sort(), [reclamacoes]);
+  const condominios = useMemo(
+    () => [...new Set([...condominiosCadastrados.map((c: any) => c.nome), ...reclamacoes.map(r => r.condominio)].filter(Boolean))].sort(),
+    [reclamacoes, condominiosCadastrados]
+  );
+
+  const blocosDoCondSelecionado = useMemo(() => {
+    if (condFiltro === 'todos') return null;
+    const c = condominiosCadastrados.find((x: any) => x.nome === condFiltro);
+    const nomes: string[] = c?.blocosNomes?.filter((n: string) => n && n.trim()) || [];
+    if (nomes.length > 0) return nomes;
+    if (c?.blocos > 0) return Array.from({ length: c.blocos }, (_, i) => String.fromCharCode(65 + i));
+    return null;
+  }, [condFiltro, condominiosCadastrados]);
+
+  const blocosNovoForm = useMemo(() => {
+    const c = condominiosCadastrados.find((x: any) => x.nome === nova.condominio);
+    const nomes: string[] = c?.blocosNomes?.filter((n: string) => n && n.trim()) || [];
+    if (nomes.length > 0) return nomes;
+    if (c?.blocos > 0) return Array.from({ length: c.blocos }, (_, i) => String.fromCharCode(65 + i));
+    return [];
+  }, [nova.condominio, condominiosCadastrados]);
   const blocos = useMemo(() => [...new Set(reclamacoes.map(r => r.bloco))].sort(), [reclamacoes]);
   const tipos = useMemo(() => [...new Set(reclamacoes.map(r => r.tipo))].sort(), [reclamacoes]);
 
@@ -179,6 +252,12 @@ const MapaCalorPage: React.FC = () => {
         onCompartilhar={() => compartilharConteudo('Mapa de Calor', 'Mapa de Calor de Reclamações do sistema App Síndico')}
         onImprimir={() => imprimirElemento('mapa-calor-content')}
         onGerarPdf={() => gerarPdfDeElemento('mapa-calor-content', 'mapa-calor-reclamacoes')}
+        acoes={
+          <button onClick={() => setModalNova(true)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--cor-primaria)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+            <Plus size={16} /> Nova Reclamação
+          </button>
+        }
       />
 
       {/* ═══ Filtros ═══ */}
@@ -203,7 +282,7 @@ const MapaCalorPage: React.FC = () => {
             <span className={styles.filtroLabel}>Bloco</span>
             <select className={styles.filtroSelect} value={blocoFiltro} onChange={e => setBlocoFiltro(e.target.value)}>
               <option value="todos">Todos</option>
-              {blocos.map(b => <option key={b} value={b}>{b}</option>)}
+              {(blocosDoCondSelecionado || blocos).map(b => <option key={b} value={b}>{b}</option>)}
             </select>
           </div>
           <div className={styles.filtroGrupo}>
@@ -404,7 +483,7 @@ const MapaCalorPage: React.FC = () => {
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
-              <Pie data={porStatus} cx="50%" cy="50%" innerRadius={45} outerRadius={95} dataKey="valor" nameKey="nome" label={({ nome, valor }) => `${nome} (${valor})`}>
+              <Pie data={porStatus} cx="50%" cy="50%" innerRadius={45} outerRadius={95} dataKey="valor" nameKey="nome" label={({ nome, valor }: any) => `${nome} (${valor})`}>
                 {porStatus.map((_, i) => <Cell key={i} fill={CORES_STATUS[i % CORES_STATUS.length]} />)}
               </Pie>
               <Tooltip contentStyle={tooltipStyle} />
@@ -436,7 +515,7 @@ const MapaCalorPage: React.FC = () => {
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
-              <Pie data={porPrioridade} cx="50%" cy="50%" innerRadius={45} outerRadius={95} dataKey="valor" nameKey="nome" label={({ nome, valor }) => `${nome} (${valor})`}>
+              <Pie data={porPrioridade} cx="50%" cy="50%" innerRadius={45} outerRadius={95} dataKey="valor" nameKey="nome" label={({ nome, valor }: any) => `${nome} (${valor})`}>
                 {porPrioridade.map((_, i) => <Cell key={i} fill={CORES_PRIORIDADE[i % CORES_PRIORIDADE.length]} />)}
               </Pie>
               <Tooltip contentStyle={tooltipStyle} />
@@ -468,7 +547,7 @@ const MapaCalorPage: React.FC = () => {
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
-              <Pie data={porUsuario} cx="50%" cy="50%" innerRadius={45} outerRadius={95} dataKey="valor" nameKey="nome" label={({ nome, valor }) => `${nome} (${valor})`}>
+              <Pie data={porUsuario} cx="50%" cy="50%" innerRadius={45} outerRadius={95} dataKey="valor" nameKey="nome" label={({ nome, valor }: any) => `${nome} (${valor})`}>
                 {porUsuario.map((_, i) => <Cell key={i} fill={Object.values(CORES_TIPO)[i % Object.values(CORES_TIPO).length]} />)}
               </Pie>
               <Tooltip contentStyle={tooltipStyle} />
@@ -520,6 +599,129 @@ const MapaCalorPage: React.FC = () => {
           </table>
         </div>
       </Card>
+
+      {/* ═══ Lista de Reclamações ═══ */}
+      <Card padding="md">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Reclamações ({dadosFiltrados.length})</h3>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table className={styles.tabela}>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Condomínio</th>
+                <th>Bloco</th>
+                <th>Tipo</th>
+                <th>Status</th>
+                <th>Prioridade</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dadosFiltrados.length === 0 && (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 18, color: 'var(--cor-texto-secundario)' }}>Nenhuma reclamação no filtro atual.</td></tr>
+              )}
+              {dadosFiltrados.slice(0, 100).map((r: any) => (
+                <tr key={r._apiId || r.id}>
+                  <td>{r.data ? new Date(r.data).toLocaleDateString('pt-BR') : '-'}</td>
+                  <td>{r.condominio}</td>
+                  <td>{r.bloco}</td>
+                  <td>{r.tipo}</td>
+                  <td>{r.status}</td>
+                  <td>{r.prioridade}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    {r._apiId && r.status !== 'Em andamento' && (
+                      <button onClick={() => mudarStatus(r._apiId, 'em_andamento')} title="Em andamento"
+                        style={{ marginRight: 4, padding: '4px 8px', border: '1px solid #fde68a', background: '#fef3c7', color: '#92400e', borderRadius: 6, cursor: 'pointer', fontSize: 11 }}>
+                        <Clock size={11} />
+                      </button>
+                    )}
+                    {r._apiId && r.status !== 'Resolvido' && (
+                      <button onClick={() => mudarStatus(r._apiId, 'resolvido')} title="Marcar como resolvido"
+                        style={{ marginRight: 4, padding: '4px 8px', border: '1px solid #86efac', background: '#dcfce7', color: '#166534', borderRadius: 6, cursor: 'pointer', fontSize: 11 }}>
+                        <Check size={11} />
+                      </button>
+                    )}
+                    {r._apiId && (
+                      <button onClick={() => excluir(r._apiId)} title="Excluir"
+                        style={{ padding: '4px 8px', border: '1px solid #fecaca', background: '#fef2f2', color: '#b91c1c', borderRadius: 6, cursor: 'pointer', fontSize: 11 }}>
+                        <Trash2 size={11} />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {dadosFiltrados.length > 100 && (
+            <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--cor-texto-secundario)', padding: 8 }}>
+              Mostrando 100 de {dadosFiltrados.length}. Use os filtros para refinar.
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {modalNova && (
+        <Modal aberto={true} titulo="Nova Reclamação" largura="md" onFechar={() => setModalNova(false)}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5, fontWeight: 500, gridColumn: '1 / -1' }}>
+              Condomínio *
+              <select value={nova.condominio} onChange={e => setNova({ ...nova, condominio: e.target.value, bloco: '' })}
+                style={{ padding: 8, border: '1.5px solid var(--cor-borda)', borderRadius: 8, fontSize: 13 }}>
+                <option value="">Selecione...</option>
+                {condominiosCadastrados.map((c: any) => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+              </select>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5, fontWeight: 500 }}>
+              Bloco
+              {blocosNovoForm.length > 0 ? (
+                <select value={nova.bloco} onChange={e => setNova({ ...nova, bloco: e.target.value })}
+                  style={{ padding: 8, border: '1.5px solid var(--cor-borda)', borderRadius: 8, fontSize: 13 }}>
+                  <option value="">Selecione...</option>
+                  {blocosNovoForm.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+              ) : (
+                <input value={nova.bloco} onChange={e => setNova({ ...nova, bloco: e.target.value })} placeholder="Ex: A"
+                  style={{ padding: 8, border: '1.5px solid var(--cor-borda)', borderRadius: 8, fontSize: 13 }} />
+              )}
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5, fontWeight: 500 }}>
+              Tipo *
+              <select value={nova.tipo} onChange={e => setNova({ ...nova, tipo: e.target.value })}
+                style={{ padding: 8, border: '1.5px solid var(--cor-borda)', borderRadius: 8, fontSize: 13 }}>
+                {['Limpeza', 'Manutenção', 'Segurança', 'Barulho', 'Vazamento', 'Elevador', 'Outro'].map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5, fontWeight: 500 }}>
+              Prioridade
+              <select value={nova.prioridade} onChange={e => setNova({ ...nova, prioridade: e.target.value })}
+                style={{ padding: 8, border: '1.5px solid var(--cor-borda)', borderRadius: 8, fontSize: 13 }}>
+                {['Urgente', 'Alta', 'Média', 'Baixa'].map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5, fontWeight: 500 }}>
+              Status
+              <select value={nova.status} onChange={e => setNova({ ...nova, status: e.target.value })}
+                style={{ padding: 8, border: '1.5px solid var(--cor-borda)', borderRadius: 8, fontSize: 13 }}>
+                {['Aberto', 'Em andamento', 'Resolvido'].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5, fontWeight: 500, gridColumn: '1 / -1' }}>
+              Descrição
+              <textarea value={nova.descricao} onChange={e => setNova({ ...nova, descricao: e.target.value })} rows={3}
+                style={{ padding: 8, border: '1.5px solid var(--cor-borda)', borderRadius: 8, fontSize: 13 }} />
+            </label>
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
+            <button onClick={() => setModalNova(false)} style={{ padding: '8px 14px', border: '1px solid var(--cor-borda)', background: '#fff', borderRadius: 8, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={salvarNova} disabled={salvando}
+              style={{ padding: '8px 14px', background: 'var(--cor-primaria)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+              {salvando ? 'Salvando...' : 'Cadastrar'}
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

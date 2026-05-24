@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../contexts/PermissionsContext';
 import HowItWorks from '../../components/Common/HowItWorks';
 import PageHeader from '../../components/Common/PageHeader';
+import Coachmark from '../../components/Common/Coachmark';
 import Card from '../../components/Common/Card';
 import { compartilharConteudo, imprimirElemento, gerarPdfDeElemento } from '../../utils/exportUtils';
 import type { UserRole } from '../../types';
@@ -84,13 +85,21 @@ const PermissoesPage: React.FC = () => {
         ]}
       />
 
-      <PageHeader
-        titulo="Permissões"
-        subtitulo="Controle de acesso por perfil"
-        onCompartilhar={() => compartilharConteudo('Permissões', 'Tabela de permissões')}
-        onImprimir={() => imprimirElemento('permissoes-content')}
-        onGerarPdf={() => gerarPdfDeElemento('permissoes-content', 'permissoes')}
-      />
+      <div style={{ position: 'relative' }}>
+        <PageHeader
+          titulo="Permissões"
+          subtitulo="Controle de acesso por perfil"
+          onCompartilhar={() => compartilharConteudo('Permissões', 'Tabela de permissões')}
+          onImprimir={() => imprimirElemento('permissoes-content')}
+          onGerarPdf={() => gerarPdfDeElemento('permissoes-content', 'permissoes')}
+        />
+        <Coachmark
+          id="permissoes-intro"
+          mensagem="Escolha o que cada funcionário pode acessar no sistema."
+          posicao="abaixo"
+          alinhamento="inicio"
+        />
+      </div>
 
       <Card padding="md">
         <div style={{ overflowX: 'auto' }}>
@@ -150,7 +159,6 @@ const PermissoesPage: React.FC = () => {
         <Card padding="md">
           <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px', color: 'var(--cor-texto)' }}>Legenda de Hierarquia</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--cor-texto-secundario)' }}>
-            <div><strong style={{ color: 'var(--cor-texto)' }}>Master:</strong> Acesso total. Bloqueia/desbloqueia usuários por inadimplência. Altera logo. Vê tudo de todos.</div>
             <div><strong style={{ color: 'var(--cor-texto)' }}>Administrador:</strong> Gerencia seus usuários. Ativa/desativa funções. Edita e exclui registros.</div>
             <div><strong style={{ color: 'var(--cor-texto)' }}>Supervisor:</strong> Vê apenas funções habilitadas pelo administrador. Edita se habilitado. Rastreamento GPS ativo.</div>
             <div><strong style={{ color: 'var(--cor-texto)' }}>Funcionário:</strong> Vê apenas o que foi habilitado pela hierarquia. Rastreamento GPS ativo.</div>

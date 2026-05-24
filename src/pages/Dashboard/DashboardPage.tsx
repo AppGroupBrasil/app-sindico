@@ -19,6 +19,7 @@ import {
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import { dashboard as dashboardApi, usuarios as usuariosApi, auth as authApi } from '../../services/api';
+import ConsolidadoView from './ConsolidadoView';
 import styles from './Dashboard.module.css';
 
 /* ── Helpers ── */
@@ -315,6 +316,9 @@ const MasterDashboard: React.FC<{ usuario: any }> = ({ usuario }) => {
         onImprimir={() => imprimirElemento('dashboard-content')}
         onGerarPdf={() => gerarPdfDeElemento('dashboard-content', 'dashboard-master')}
       />
+
+      {/* Visão consolidada (master + administradora) */}
+      {(usuario?.role === 'master' || usuario?.role === 'administrador') && <ConsolidadoView />}
 
       {/* Revista do Condomínio */}
       <div
@@ -844,6 +848,9 @@ const StandardDashboard: React.FC = () => {
         onGerarPdf={() => gerarPdfDeElemento('dashboard-content', 'dashboard')}
       />
 
+      {/* Visão consolidada para administradoras (vê todos os seus condomínios) */}
+      {usuario?.role === 'administrador' && <ConsolidadoView />}
+
       {/* Revista do Condomínio */}
       <div
         onClick={() => navigate('/revista')}
@@ -945,7 +952,7 @@ const StandardDashboard: React.FC = () => {
                 outerRadius={100}
                 dataKey="valor"
                 nameKey="nome"
-                label={({ nome, percent }) => `${nome} ${(percent * 100).toFixed(0)}%`}
+                label={({ nome, percent }: any) => `${nome} ${(percent * 100).toFixed(0)}%`}
               >
                 {(dados.tipoArr.length ? dados.tipoArr : [{ nome: 'Sem dados', valor: 1 }]).map((_: any, i: number) => (
                   <Cell key={i} fill={dados.tipoArr.length ? CORES_GRAFICO[i % CORES_GRAFICO.length] : '#ccc'} />

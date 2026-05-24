@@ -279,7 +279,7 @@ router.post('/forgot-password', async (req, res: Response) => {
 
     // Enviar e-mail com link de reset
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const emailData = emailResetSenha(user.nome || email, token, `${frontendUrl}/esqueci-senha`);
+    const emailData = await emailResetSenha(user.nome || email, token, `${frontendUrl}/esqueci-senha`);
     emailData.to = email;
     await sendEmail(emailData).catch(err => console.error('[RESET] Erro ao enviar email:', err));
   }

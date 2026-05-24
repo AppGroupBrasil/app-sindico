@@ -25,6 +25,7 @@ import MapaCalorPage from './pages/MapaCalor/MapaCalorPage';
 import TarefasPage from './pages/Tarefas/TarefasPage';
 import RoteiroExecucaoPage from './pages/Roteiros/RoteiroExecucaoPage';
 import VencimentosPage from './pages/Vencimentos/VencimentosPage';
+import LaudosPage from './pages/Laudos/LaudosPage';
 import MoradoresPage from './pages/Moradores/MoradoresPage';
 import ComunicadosPage from './pages/Comunicados/ComunicadosPage';
 import QuadroAtividadesPage from './pages/QuadroAtividades/QuadroAtividadesPage';
@@ -42,7 +43,6 @@ import DocumentosPage from './pages/Documentos/DocumentosPage';
 import SolicitacoesPage from './pages/Solicitacoes/SolicitacoesPage';
 
 import CalendarioPage from './pages/Calendario/CalendarioPage';
-import WhatsAppPage from './pages/WhatsApp/WhatsAppPage';
 import SindicoPage from './pages/Sindico/SindicoPage';
 
 
@@ -164,6 +164,7 @@ const App: React.FC = () => {
         <Route path="tarefas" element={<TarefasPage />} />
         <Route path="roteiros" element={<RoteiroExecucaoPage />} />
         <Route path="vencimentos" element={<RoleGuard minRole={2}><VencimentosPage /></RoleGuard>} />
+        <Route path="laudos" element={<RoleGuard minRole={2}><LaudosPage /></RoleGuard>} />
         <Route path="moradores" element={<RoleGuard minRole={2}><MoradoresPage /></RoleGuard>} />
         <Route path="comunicados" element={<RoleGuard minRole={2}><ComunicadosPage /></RoleGuard>} />
         <Route path="quadro-atividades" element={<QuadroAtividadesPage />} />
@@ -179,7 +180,6 @@ const App: React.FC = () => {
         <Route path="solicitacoes" element={<RoleGuard minRole={2}><SolicitacoesPage /></RoleGuard>} />
 
         <Route path="calendario" element={<RoleGuard minRole={2}><CalendarioPage /></RoleGuard>} />
-        <Route path="whatsapp" element={<RoleGuard minRole={3}><WhatsAppPage /></RoleGuard>} />
         <Route path="sindico" element={<RoleGuard minRole={3}><SindicoPage /></RoleGuard>} />
 
 

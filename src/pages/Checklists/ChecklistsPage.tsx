@@ -1,6 +1,7 @@
 ﻿import React, { useState, useRef, useEffect } from 'react';
 import HowItWorks from '../../components/Common/HowItWorks';
 import PageHeader from '../../components/Common/PageHeader';
+import Coachmark from '../../components/Common/Coachmark';
 import Card from '../../components/Common/Card';
 import StatusBadge from '../../components/Common/StatusBadge';
 import Modal from '../../components/Common/Modal';
@@ -10,7 +11,7 @@ import type { ChecklistLimpeza } from '../../types';
 import { Plus, CheckCircle2, ClipboardCheck, MoreVertical, AlertTriangle, Camera, X, Upload, ChevronRight, MessageCircle, Settings, Save, Trash2, Hash, Search, Minus } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDemo } from '../../contexts/DemoContext';
-import { checklists as checklistsApi, reportes as reportesApi, moradores as moradoresApi } from '../../services/api';
+import { checklists as checklistsApi, reportes as reportesApi, moradores as moradoresApi, condominios as condominiosApi, checklistTemplates as templatesApi } from '../../services/api';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import EmptyState from '../../components/Common/EmptyState';
 import Pagination from '../../components/Common/Pagination';
@@ -63,8 +64,16 @@ const ChecklistsPage: React.FC = () => {
   const [showNovoModal, setShowNovoModal] = useState(false);
   const [novoLocal, setNovoLocal] = useState('');
   const [novoTipo, setNovoTipo] = useState<'diaria' | 'semanal' | 'mensal' | 'especial'>('diaria');
-  const [novoCond, setNovoCond] = useState('c1');
+  const [novoCond, setNovoCond] = useState('');
   const [novosItens, setNovosItens] = useState<string[]>(['']);
+  const [condosOpcoes, setCondosOpcoes] = useState<Array<{ id: string; nome: string }>>([]);
+  const [erroNovo, setErroNovo] = useState('');
+  const [novoNomeModelo, setNovoNomeModelo] = useState('');
+  const [salvarComoModelo, setSalvarComoModelo] = useState(false);
+
+  // Aba ativa: realizados vs modelos
+  const [aba, setAba] = useState<'realizados' | 'modelos'>('realizados');
+  const [modelos, setModelos] = useState<any[]>([]);
 
   const adicionarItem = () => setNovosItens(prev => [...prev, '']);
   const removerItem = (idx: number) => setNovosItens(prev => prev.filter((_, i) => i !== idx));
@@ -72,31 +81,50 @@ const ChecklistsPage: React.FC = () => {
 
   const criarChecklist = async () => {
     if (!tentarAcao()) return;
-    if (!novoLocal.trim() || novosItens.every(i => !i.trim())) return;
+    setErroNovo('');
+    if (!novoCond) { setErroNovo('Selecione um condomínio.'); return; }
+    if (!novoLocal.trim()) { setErroNovo('Informe o local.'); return; }
+    if (novosItens.every(i => !i.trim())) { setErroNovo('Adicione pelo menos um item.'); return; }
     const payload = {
       condominioId: novoCond,
       local: novoLocal.trim(),
       tipo: novoTipo,
       itens: novosItens.filter(i => i.trim()).map((desc, idx) => ({ id: String(idx + 1), descricao: desc.trim(), concluido: false })),
-      responsavelId: 'func-001',
       data: new Date().toISOString().split('T')[0],
       status: 'pendente',
-      criadoPor: 'sup-001',
-      criadoEm: Date.now(),
     };
     try {
       const criado = await checklistsApi.create(payload) as ChecklistLimpeza;
       setChecklists(prev => [criado, ...prev]);
-    } catch (err) { console.error(err); }
-    setNovoLocal('');
-    setNovoTipo('diaria');
-    setNovoCond('c1');
-    setNovosItens(['']);
-    setShowNovoModal(false);
+
+      // Salvar também como modelo reutilizável, se marcado
+      if (salvarComoModelo) {
+        try {
+          await templatesApi.create({
+            nome: novoNomeModelo.trim() || novoLocal.trim() || 'Modelo sem nome',
+            condominioId: novoCond,
+            local: novoLocal.trim(),
+            tipo: novoTipo,
+            itens: payload.itens.map((i: any) => ({ descricao: i.descricao })),
+          });
+          carregarModelos();
+        } catch (e: any) {
+          alert('Checklist criado, mas falhou salvar como modelo: ' + (e?.message || ''));
+        }
+      }
+
+      setNovoLocal('');
+      setNovoTipo('diaria');
+      setNovoCond(condosOpcoes[0]?.id || '');
+      setNovosItens(['']);
+      setSalvarComoModelo(false);
+      setNovoNomeModelo('');
+      setShowNovoModal(false);
+    } catch (err: any) {
+      setErroNovo(err?.message || 'Erro ao salvar checklist.');
+    }
   };
 
-  // Ações modal (2 opções: Reportar Problema + Antes/Depois)
-  const [acoesModal, setAcoesModal] = useState<{ ckId: string; itemId: string; itemDesc: string } | null>(null);
 
   // Reportar Problema
   const [problemaModal, setProblemaModal] = useState<{ ckId: string; itemId: string; itemDesc: string } | null>(null);
@@ -111,16 +139,45 @@ const ChecklistsPage: React.FC = () => {
   const [whatsTelefone, setWhatsTelefone] = useState('');
   const [showWhatsConfig, setShowWhatsConfig] = useState(false);
 
+  const carregarModelos = () => templatesApi.list().then(setModelos).catch(() => setModelos([]));
+
   useEffect(() => {
     Promise.all([
       checklistsApi.list(),
       moradoresApi.listWhatsContatos().catch(() => []),
-    ]).then(([cks, contatos]) => {
+      condominiosApi.list().catch(() => []),
+      templatesApi.list().catch(() => []),
+    ]).then(([cks, contatos, condos, tpls]) => {
       setChecklists(cks as ChecklistLimpeza[]);
       setContatosWhats(contatos as ContatoWhats[]);
+      const lista = (condos as Array<{ id: string; nome: string }>);
+      setCondosOpcoes(lista);
+      if (lista.length > 0) setNovoCond(lista[0].id);
       if ((contatos as ContatoWhats[]).length > 0) setContatoSelecionado((contatos as ContatoWhats[])[0].id);
+      setModelos(tpls as any[]);
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
+
+  const usarModelo = async (modeloId: string) => {
+    try {
+      const exec: any = await templatesApi.usar(modeloId);
+      setChecklists(prev => [exec, ...prev]);
+      setAba('realizados');
+      alert('Checklist criado a partir do modelo!');
+    } catch (err: any) {
+      alert('Falha ao usar modelo: ' + (err?.message || 'erro desconhecido'));
+    }
+  };
+
+  const excluirModelo = async (modeloId: string, nome: string) => {
+    if (!confirm(`Excluir o modelo "${nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await templatesApi.remove(modeloId);
+      setModelos(prev => prev.filter(m => m.id !== modeloId));
+    } catch (err: any) {
+      alert('Falha ao excluir modelo: ' + (err?.message || 'erro desconhecido'));
+    }
+  };
 
   const salvarNovoContato = async () => {
     if (!whatsNome.trim() || !whatsTelefone.trim()) return;
@@ -174,23 +231,15 @@ const ChecklistsPage: React.FC = () => {
     setProblemaModal(null);
   };
 
-  const abrirAcoes = (ckId: string, itemId: string, itemDesc: string) => {
-    setAcoesModal({ ckId, itemId, itemDesc });
-  };
-
-  const abrirProblema = () => {
-    if (!acoesModal) return;
-    setProblema({ itemId: acoesModal.itemId, checklistId: acoesModal.ckId, descricao: '', status: 'aberto', prioridade: 'media', imagens: [] });
+  const abrirProblema = (ckId: string, itemId: string, itemDesc: string) => {
+    setProblema({ itemId, checklistId: ckId, descricao: '', status: 'aberto', prioridade: 'media', imagens: [] });
     setProtocolo(gerarProtocolo());
-    setProblemaModal({ ...acoesModal });
-    setAcoesModal(null);
+    setProblemaModal({ ckId, itemId, itemDesc });
   };
 
-  const abrirAntesDepois = () => {
-    if (!acoesModal) return;
-    setAntesDepois({ itemId: acoesModal.itemId, checklistId: acoesModal.ckId, fotoAntes: null, descAntes: '', fotoDepois: null, descDepois: '' });
-    setAntesDepoisModal({ ...acoesModal });
-    setAcoesModal(null);
+  const abrirAntesDepois = (ckId: string, itemId: string, itemDesc: string) => {
+    setAntesDepois({ itemId, checklistId: ckId, fotoAntes: null, descAntes: '', fotoDepois: null, descDepois: '' });
+    setAntesDepoisModal({ ckId, itemId, itemDesc });
   };
 
   const handleImagemProblema = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -264,7 +313,7 @@ const ChecklistsPage: React.FC = () => {
 
       <PageHeader
         titulo="Checklist de Manutenção"
-        subtitulo={`${checklists.length} checklists`}
+        subtitulo={aba === 'realizados' ? `${checklists.length} realizados` : `${modelos.length} modelos salvos`}
         onCompartilhar={() => compartilharConteudo('Checklists', 'Listagem de checklists')}
         onImprimir={() => imprimirElemento('checklists-content')}
         onGerarPdf={() => gerarPdfDeElemento('checklists-content', 'checklists')}
@@ -275,6 +324,93 @@ const ChecklistsPage: React.FC = () => {
         }
       />
 
+      {/* Tabs Realizados / Modelos */}
+      <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid #e5e7eb', marginBottom: 16 }}>
+        <button
+          onClick={() => setAba('realizados')}
+          style={{
+            padding: '10px 18px', border: 0, background: 'transparent',
+            borderBottom: aba === 'realizados' ? '3px solid #2563eb' : '3px solid transparent',
+            color: aba === 'realizados' ? '#2563eb' : '#6b7280',
+            fontWeight: 600, cursor: 'pointer', marginBottom: -2,
+          }}
+        >
+          Checklists realizados ({checklists.length})
+        </button>
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setAba('modelos')}
+            style={{
+              padding: '10px 18px', border: 0, background: 'transparent',
+              borderBottom: aba === 'modelos' ? '3px solid #2563eb' : '3px solid transparent',
+              color: aba === 'modelos' ? '#2563eb' : '#6b7280',
+              fontWeight: 600, cursor: 'pointer', marginBottom: -2,
+            }}
+          >
+            Modelos salvos ({modelos.length})
+          </button>
+          <Coachmark
+            id="checklist-modelos-intro"
+            posicao="abaixo"
+            alinhamento="centro"
+            largura={300}
+            mensagem={
+              <span>
+                <strong>Modelos reutilizáveis.</strong> Salve um checklist como modelo
+                marcando a opção <em>"Salvar como modelo"</em> ao criar. Depois é só clicar
+                em <strong>Usar modelo</strong> que ele vira uma execução nova com a data de hoje.
+                <br /><br />
+                <strong>Sem condomínio fixo:</strong> se o modelo for criado sem vincular
+                a um condomínio específico, ele fica disponível para todos os condomínios
+                que você administra — útil para checklists genéricos (limpeza padrão,
+                vistoria semanal, etc.).
+              </span>
+            }
+          />
+        </div>
+      </div>
+
+      {aba === 'modelos' && (
+        <div style={{ display: 'grid', gap: 10, marginBottom: 24 }}>
+          {modelos.length === 0 && (
+            <Card padding="md"><p style={{ margin: 0, color: '#6b7280' }}>
+              Nenhum modelo salvo ainda. Ao criar um novo checklist, marque a opção <strong>"Salvar como modelo reutilizável"</strong>.
+            </p></Card>
+          )}
+          {modelos.map((m: any) => (
+            <Card key={m.id} padding="md">
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 220 }}>
+                  <strong style={{ fontSize: 15 }}>{m.nome}</strong>
+                  <div style={{ color: '#6b7280', fontSize: 13, marginTop: 4 }}>
+                    {m.tipo} · {m.condominio_nome || 'Sem condomínio fixo'} · {(m.itens?.length || 0)} {m.itens?.length === 1 ? 'item' : 'itens'}
+                    {m.vezes_usado > 0 && ` · usado ${m.vezes_usado}x`}
+                  </div>
+                  {m.local && <div style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>Local: {m.local}</div>}
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    onClick={() => usarModelo(m.id)}
+                    style={{ padding: '8px 14px', background: '#2563eb', color: '#fff', border: 0, borderRadius: 8, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <Plus size={14} /> Usar modelo
+                  </button>
+                  <button
+                    onClick={() => excluirModelo(m.id, m.nome)}
+                    style={{ padding: '8px 10px', background: '#fff', color: '#dc2626', border: '1px solid #fecaca', borderRadius: 8, cursor: 'pointer' }}
+                    title="Excluir modelo"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {aba === 'realizados' && (
+      <>
       <div className={styles.buscaArea}>
         <Search size={18} className={styles.buscaIcon} />
         <input
@@ -345,13 +481,24 @@ const ChecklistsPage: React.FC = () => {
                         {item.concluido ? <CheckCircle2 size={16} color="#2e7d32" /> : <div className={styles.unchecked} />}
                       </div>
                       <span className={styles.itemText}>{item.descricao}</span>
-                      <button
-                        className={styles.itemAction}
-                        onClick={() => abrirAcoes(ck.id, item.id, item.descricao)}
-                        title="Ações"
-                      >
-                        <MoreVertical size={16} />
-                      </button>
+                      <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+                        <button
+                          className={styles.itemAction}
+                          onClick={() => abrirProblema(ck.id, item.id, item.descricao)}
+                          title="Reportar um problema"
+                          style={{ background: '#fff3e0', color: '#e65100', borderRadius: 8, padding: 6, border: 0, cursor: 'pointer', display: 'inline-flex' }}
+                        >
+                          <AlertTriangle size={16} />
+                        </button>
+                        <button
+                          className={styles.itemAction}
+                          onClick={() => abrirAntesDepois(ck.id, item.id, item.descricao)}
+                          title="Antes e Depois"
+                          style={{ background: '#e8f5e9', color: '#2e7d32', borderRadius: 8, padding: 6, border: 0, cursor: 'pointer', display: 'inline-flex' }}
+                        >
+                          <Camera size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -379,33 +526,8 @@ const ChecklistsPage: React.FC = () => {
           </ResponsiveContainer>
         </Card>
       </div>
-
-      {/* ===== MODAL AÇÕES (2 opções) ===== */}
-      <Modal aberto={!!acoesModal} onFechar={() => setAcoesModal(null)} titulo="Açõe do Item" largura="sm">
-        <p className={styles.modalItemDesc}>{acoesModal?.itemDesc}</p>
-        <div className={styles.acoesGrid}>
-          <button className={styles.acaoCard} onClick={abrirProblema}>
-            <div className={styles.acaoIcone} style={{ background: '#fff3e0', color: '#e65100' }}>
-              <AlertTriangle size={26} />
-            </div>
-            <div className={styles.acaoTextos}>
-              <strong>Reportar um Problema</strong>
-              <span>Adicione fotos, descrição, status e prioridade do problema encontrado</span>
-            </div>
-            <ChevronRight size={18} className={styles.acaoSeta} />
-          </button>
-          <button className={styles.acaoCard} onClick={abrirAntesDepois}>
-            <div className={styles.acaoIcone} style={{ background: '#e8f5e9', color: '#2e7d32' }}>
-              <Camera size={26} />
-            </div>
-            <div className={styles.acaoTextos}>
-              <strong>Antes e Depois</strong>
-              <span>Registre fotos com descrição do antes e depois da execução</span>
-            </div>
-            <ChevronRight size={18} className={styles.acaoSeta} />
-          </button>
-        </div>
-      </Modal>
+      </>
+      )}
 
       {/* ===== MODAL REPORTAR PROBLEMA ===== */}
       <Modal aberto={!!problemaModal} onFechar={() => setProblemaModal(null)} titulo="Reportar Problema" largura="md">
@@ -670,12 +792,23 @@ const ChecklistsPage: React.FC = () => {
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>Condomínio</label>
               <select className={styles.formSelect} value={novoCond} onChange={e => setNovoCond(e.target.value)}>
-                <option value="c1">Cond. Aurora</option>
-                <option value="c2">Cond. Solar</option>
-                <option value="c3">Cond. Vista</option>
+                <option value="">Selecione um condomínio...</option>
+                {condosOpcoes.map(c => (
+                  <option key={c.id} value={c.id}>{c.nome}</option>
+                ))}
               </select>
+              {condosOpcoes.length === 0 && (
+                <small style={{ color: '#dc2626', marginTop: 4, display: 'block' }}>
+                  Nenhum condomínio cadastrado. Vá em "Cadastro de Condomínios" e crie um antes.
+                </small>
+              )}
             </div>
           </div>
+          {erroNovo && (
+            <div style={{ background: '#fee2e2', color: '#991b1b', padding: 10, borderRadius: 8, margin: '8px 0' }}>
+              {erroNovo}
+            </div>
+          )}
 
           <label className={styles.formLabel}>Itens do Checklist</label>
           <div className={styles.itensLista}>
@@ -697,6 +830,30 @@ const ChecklistsPage: React.FC = () => {
             <button className={styles.itemAddBtn} onClick={adicionarItem}>
               <Plus size={16} /> Adicionar Item
             </button>
+          </div>
+
+          <div style={{ marginTop: 14, padding: 12, background: '#f3f4f6', borderRadius: 10 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+              <input
+                type="checkbox"
+                checked={salvarComoModelo}
+                onChange={e => setSalvarComoModelo(e.target.checked)}
+                style={{ width: 16, height: 16, cursor: 'pointer' }}
+              />
+              Salvar também como modelo reutilizável
+            </label>
+            <small style={{ display: 'block', color: '#6b7280', marginTop: 4, marginLeft: 24 }}>
+              O modelo fica em "Modelos salvos" e pode ser usado quantas vezes precisar em outros dias ou condomínios.
+            </small>
+            {salvarComoModelo && (
+              <input
+                type="text"
+                value={novoNomeModelo}
+                onChange={e => setNovoNomeModelo(e.target.value)}
+                placeholder="Nome do modelo (opcional — usa o local se vazio)"
+                style={{ marginTop: 10, marginLeft: 24, width: 'calc(100% - 24px)', padding: 8, border: '1px solid #d1d5db', borderRadius: 6 }}
+              />
+            )}
           </div>
 
           <button className={styles.formSubmit} onClick={criarChecklist}>

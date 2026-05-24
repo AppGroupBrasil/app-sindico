@@ -154,7 +154,7 @@ const PlanosManutencaoPage: React.FC = () => {
         setPlanos(prev => [...prev, criado]);
       }
       setShowModal(false);
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const excluir = async (id: string) => {
@@ -163,7 +163,7 @@ const PlanosManutencaoPage: React.FC = () => {
     try {
       await planosApi.remove(id);
       setPlanos(prev => prev.filter(p => p.id !== id));
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const abrirExecucoes = async (p: any) => {
@@ -184,7 +184,7 @@ const PlanosManutencaoPage: React.FC = () => {
       setPlanos(prev => prev.map(p => p.id === execPlano.id ? { ...p, totalExecucoes: (p.totalExecucoes || 0) + 1, ultimaExecucao: execForm.dataExecucao } : p));
       setShowNovaExec(false);
       setExecForm({ dataExecucao: '', observacoes: '', status: 'concluida' });
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   // Itens verificação helpers
@@ -317,7 +317,7 @@ const PlanosManutencaoPage: React.FC = () => {
           <Card>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-                <Pie data={chartFreq} dataKey="valor" nameKey="nome" cx="50%" cy="50%" outerRadius={90} label={({ nome, valor }) => `${nome}: ${valor}`}>
+                <Pie data={chartFreq} dataKey="valor" nameKey="nome" cx="50%" cy="50%" outerRadius={90} label={({ nome, valor }: any) => `${nome}: ${valor}`}>
                   {chartFreq.map((_, i) => <Cell key={i} fill={CORES[i % CORES.length]} />)}
                 </Pie>
                 <Tooltip />

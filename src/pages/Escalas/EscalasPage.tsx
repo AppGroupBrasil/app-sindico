@@ -115,7 +115,7 @@ const EscalasPage: React.FC = () => {
       if (!esc) return;
       await escalasApi.update(id, { funcionarioNome: esc.func, diaSemana: esc.dia, horaInicio: esc.inicio, horaFim: esc.fim, local: esc.local, funcao: esc.funcao, observacoes: obs });
       setEscalas(prev => prev.map(e => e.id === id ? { ...e, observacoes: obs } : e));
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const adicionarEscala = async () => {
@@ -135,7 +135,7 @@ const EscalasPage: React.FC = () => {
       setEscalas(prev => [...prev, nova]);
       setNovaEscala({ func: '', dia: '1', inicio: '08:00', fim: '17:00', local: '', funcao: 'Limpeza', observacoes: '' });
       setShowModal(false);
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   const pag = usePagination(escalas, { pageSize: 20 });

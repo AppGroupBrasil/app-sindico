@@ -13,6 +13,7 @@ import {
 import styles from './Sidebar.module.css';
 import logoImg from '../../assets/logo.png';
 import { notificacoes as notificacoesApi } from '../../services/api';
+import Coachmark from '../Common/Coachmark';
 
 interface MenuItem {
   id: string;
@@ -20,23 +21,25 @@ interface MenuItem {
   icon: React.ReactNode;
   rota: string;
   minRole: number;
+  tooltip?: string;
 }
 
 const menuItems: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, rota: '/dashboard', minRole: 1 },
   { id: 'vencimentos', label: 'Agenda de Vencimentos', icon: <CalendarClock size={20} />, rota: '/vencimentos', minRole: 2 },
+  { id: 'laudos', label: 'Laudos Obrigatórios', icon: <ShieldCheck size={20} />, rota: '/laudos', minRole: 2 },
 
   { id: 'condominios', label: 'Cadastro de Condomínios', icon: <Building2 size={20} />, rota: '/condominios', minRole: 2 },
   { id: 'moradores', label: 'Cadastro de Moradores', icon: <Contact size={20} />, rota: '/moradores', minRole: 2 },
   { id: 'permissoes', label: 'Cadastro de Permissões', icon: <Shield size={20} />, rota: '/permissoes', minRole: 3 },
-  { id: 'usuarios', label: 'Cadastro de Usuários', icon: <Users size={20} />, rota: '/usuarios', minRole: 3 },
+  { id: 'usuarios', label: 'Cadastro de Usuários', icon: <Users size={20} />, rota: '/usuarios', minRole: 3, tooltip: 'Cadastre aqui os usuários que vão acessar o aplicativo ou acessar o sistema.' },
   { id: 'calendario', label: 'Calendário Manutenção', icon: <CalendarDays size={20} />, rota: '/calendario', minRole: 2 },
   { id: 'checklists', label: 'Checklists', icon: <ClipboardCheck size={20} />, rota: '/checklists', minRole: 1 },
   { id: 'comunicados', label: 'Comunicados / Avisos', icon: <Megaphone size={20} />, rota: '/comunicados', minRole: 2 },
   { id: 'configuracoes', label: 'Configurações', icon: <Settings size={20} />, rota: '/configuracoes', minRole: 1 },
   { id: 'materiais', label: 'Controle de Estoque', icon: <Package size={20} />, rota: '/materiais', minRole: 1 },
 
-  { id: 'qrcode', label: 'Criar QR Code', icon: <QrCode size={20} />, rota: '/qrcode', minRole: 2 },
+  { id: 'qrcode', label: 'Criar QR Code', icon: <QrCode size={20} />, rota: '/qrcode', minRole: 2, tooltip: 'Todas as reclamações, ocorrências, urgências e problemas de manutenção enviados pelo QR Code serão direcionados para a aba "Solicitação dos Moradores".' },
   { id: 'documentos', label: 'Documentação Técnica', icon: <FileText size={20} />, rota: '/documentos', minRole: 2 },
   { id: 'equipamentos', label: 'Equipamentos', icon: <Cog size={20} />, rota: '/equipamentos', minRole: 2 },
   { id: 'escalas', label: 'Escalas', icon: <Calendar size={20} />, rota: '/escalas', minRole: 2 },
@@ -53,12 +56,10 @@ const menuItems: MenuItem[] = [
   { id: 'quadro-atividades', label: 'Quadro de Atividades', icon: <Columns3 size={20} />, rota: '/quadro-atividades', minRole: 1 },
   { id: 'mapa-calor', label: 'Reclamações', icon: <Flame size={20} />, rota: '/mapa-calor', minRole: 3 },
   { id: 'relatorios', label: 'Relatórios', icon: <BarChart3 size={20} />, rota: '/relatorios', minRole: 2 },
-  { id: 'reportes', label: 'Reportes', icon: <FileWarning size={20} />, rota: '/reportes', minRole: 1 },
+  { id: 'reportes', label: 'Solicitação dos Moradores', icon: <FileWarning size={20} />, rota: '/reportes', minRole: 1, tooltip: 'Solicitações enviadas pelos moradores através do QR Code (reclamações, ocorrências, urgências e problemas de manutenção).' },
   { id: 'roteiros', label: 'Roteiro de Execução', icon: <BookOpen size={20} />, rota: '/roteiros', minRole: 1 },
-  { id: 'solicitacoes', label: 'Solicitações Moradores', icon: <MessageSquareText size={20} />, rota: '/solicitacoes', minRole: 2 },
   { id: 'tarefas', label: 'Tarefas Agendadas', icon: <CalendarCheck size={20} />, rota: '/tarefas', minRole: 1 },
   { id: 'vistorias', label: 'Vistorias', icon: <Eye size={20} />, rota: '/vistorias', minRole: 1 },
-  { id: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle size={20} />, rota: '/whatsapp', minRole: 3 },
 ];
 
 const ORDEM_KEY = 'manutencao-sidebar-ordem';
@@ -225,9 +226,9 @@ const Sidebar: React.FC = () => {
               {tema.logoUrl ? (
                 <img src={tema.logoUrl} alt="Logo" className={styles.logo} />
               ) : (
-                <img src={logoImg} alt="Manutenção X" className={styles.logo} />
+                <img src={logoImg} alt="App Síndico" className={styles.logo} />
               )}
-              <span className={styles.brandName}>Manutenção <span className={styles.brandDestaque}>X</span></span>
+              <span className={styles.brandName}>App <span className={styles.brandDestaque}>Síndico</span></span>
             </div>
             <div className={styles.topBarActions}>
               {isDemo && (
@@ -267,10 +268,10 @@ const Sidebar: React.FC = () => {
               {tema.logoUrl ? (
                 <img src={tema.logoUrl} alt="Logo" className={styles.logo} />
               ) : (
-                <img src={logoImg} alt="Manutenção X" className={styles.logo} />
+                <img src={logoImg} alt="App Síndico" className={styles.logo} />
               )}
               <div className={styles.brandText}>
-                <span className={styles.brandName}>Manutenção <span className={styles.brandDestaque}>X</span></span>
+                <span className={styles.brandName}>App <span className={styles.brandDestaque}>Síndico</span></span>
               </div>
             </div>
           )}
@@ -318,15 +319,23 @@ const Sidebar: React.FC = () => {
                 <GripVertical size={14} />
                 {editandoOrdem ? 'Concluir' : 'Reorganizar'}
               </button>
-              <button
-                className={`${styles.reorderToggle} ${editandoVisibilidade ? styles.reorderToggleAtivo : ''}`}
-                onClick={() => { setEditandoVisibilidade(v => !v); setEditandoOrdem(false); }}
-                title="Ocultar itens do menu"
-                disabled={editandoOrdem}
-              >
-                <EyeOff size={14} />
-                {editandoVisibilidade ? 'Concluir' : 'Ocultar'}
-              </button>
+              <div style={{ position: 'relative', display: 'inline-flex' }}>
+                <button
+                  className={`${styles.reorderToggle} ${editandoVisibilidade ? styles.reorderToggleAtivo : ''}`}
+                  onClick={() => { setEditandoVisibilidade(v => !v); setEditandoOrdem(false); }}
+                  title="Ocultar itens do menu"
+                  disabled={editandoOrdem}
+                >
+                  <EyeOff size={14} />
+                  {editandoVisibilidade ? 'Concluir' : 'Ocultar'}
+                </button>
+                <Coachmark
+                  id="sidebar-ocultar"
+                  mensagem="Esconda do menu os itens que você não usa — deixa a navegação só com o que importa pra você."
+                  posicao="abaixo"
+                  alinhamento="inicio"
+                />
+              </div>
               {editandoOrdem && (
                 <button className={styles.reorderReset} onClick={resetarOrdem} title="Restaurar ordem padrão">
                   <RotateCcw size={13} />
@@ -377,7 +386,7 @@ const Sidebar: React.FC = () => {
                 key={item.id}
                 className={`${styles.navItem} ${location.pathname === item.rota ? styles.active : ''} ${dragOverIdx === idx ? styles.navItemDragOver : ''} ${isOculto && editandoVisibilidade ? styles.navItemOculto : ''}`}
                 onClick={() => !editandoOrdem && !editandoVisibilidade && handleNav(item.rota)}
-                title={collapsed ? item.label : undefined}
+                title={item.tooltip ? item.tooltip : (collapsed ? item.label : undefined)}
                 draggable={editandoOrdem}
                 onDragStart={() => handleDragStart(idx)}
                 onDragOver={e => handleDragOver(e, idx)}

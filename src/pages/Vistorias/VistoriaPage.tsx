@@ -245,6 +245,11 @@ const VistoriaPage: React.FC = () => {
   const handleAddFotoGaleria = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !galeriaItem) return;
+    if (galeriaItem.item.fotos.length >= 5) {
+      alert('Cada local aceita no máximo 5 fotos. Remova alguma para adicionar outra.');
+      e.target.value = '';
+      return;
+    }
     const erro = validarImagem(file);
     if (erro) { alert(erro); e.target.value = ''; return; }
     const reader = new FileReader();
@@ -590,10 +595,10 @@ const VistoriaPage: React.FC = () => {
         {galeriaItem && (
           <div className={styles.galeriaModal}>
             <div className={styles.galeriaAdd}>
-              <input className={styles.formInput} placeholder="Descrição da foto (opcional)" value={descFotoNova} onChange={e => setDescFotoNova(e.target.value)} style={{ flex: 1 }} />
+              <input className={styles.formInput} placeholder="Descrição da foto (opcional)" value={descFotoNova} onChange={e => setDescFotoNova(e.target.value)} style={{ flex: 1 }} disabled={galeriaItem.item.fotos.length >= 5} />
               <input ref={fotoInputRef} type="file" accept="image/*" hidden onChange={handleAddFotoGaleria} />
-              <button className={styles.fotoAddBtn} onClick={() => fotoInputRef.current?.click()}>
-                <Camera size={16} /> Adicionar Foto
+              <button className={styles.fotoAddBtn} onClick={() => fotoInputRef.current?.click()} disabled={galeriaItem.item.fotos.length >= 5} title={galeriaItem.item.fotos.length >= 5 ? 'Limite de 5 fotos atingido' : 'Adicionar foto'}>
+                <Camera size={16} /> Adicionar Foto ({galeriaItem.item.fotos.length}/5)
               </button>
             </div>
 

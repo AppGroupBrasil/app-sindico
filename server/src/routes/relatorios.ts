@@ -17,18 +17,18 @@ router.get('/resumo', async (req: AuthRequest, res: Response) => {
   const [osMensal, osPorCond, custoMensal, produtividade] = await Promise.all([
     // OS por mês (últimos 6 meses)
     query(`
-      SELECT TO_CHAR(criado_em, 'Mon') as mes,
+      SELECT TO_CHAR(data_abertura, 'Mon') as mes,
         COUNT(*) FILTER (WHERE tipo = 'limpeza')::int as limpeza,
         COUNT(*) FILTER (WHERE tipo = 'manutencao')::int as manutencao,
         COUNT(*) FILTER (WHERE tipo = 'emergencia')::int as emergencia
       FROM ordens_servico
-      WHERE condominio_id IN (${ph}) AND criado_em >= CURRENT_DATE - INTERVAL '6 months'
-      GROUP BY TO_CHAR(criado_em, 'Mon'), DATE_TRUNC('month', criado_em)
-      ORDER BY DATE_TRUNC('month', criado_em)
+      WHERE condominio_id IN (${ph}) AND data_abertura >= CURRENT_DATE - INTERVAL '6 months'
+      GROUP BY TO_CHAR(data_abertura, 'Mon'), DATE_TRUNC('month', data_abertura)
+      ORDER BY DATE_TRUNC('month', data_abertura)
     `, ids),
     // OS por condomínio
     query(`
-      SELECT c.nome, COUNT(os.id)::int as os, COALESCE(AVG(os.nota), 0)::numeric(3,1) as avaliacao
+      SELECT c.nome, COUNT(os.id)::int as os, COALESCE(AVG(os.avaliacao_nota), 0)::numeric(3,1) as avaliacao
       FROM condominios c LEFT JOIN ordens_servico os ON os.condominio_id = c.id
       WHERE c.id IN (${ph})
       GROUP BY c.nome
@@ -36,11 +36,11 @@ router.get('/resumo', async (req: AuthRequest, res: Response) => {
     `, ids),
     // Custos mensais
     query(`
-      SELECT TO_CHAR(criado_em, 'Mon') as mes, COALESCE(SUM(custo), 0)::numeric(10,2) as custo
+      SELECT TO_CHAR(data_abertura, 'Mon') as mes, COALESCE(SUM(COALESCE(custo_material,0)+COALESCE(custo_mao_obra,0)+COALESCE(custo_terceiros,0)), 0)::numeric(10,2) as custo
       FROM ordens_servico
-      WHERE condominio_id IN (${ph}) AND criado_em >= CURRENT_DATE - INTERVAL '6 months'
-      GROUP BY TO_CHAR(criado_em, 'Mon'), DATE_TRUNC('month', criado_em)
-      ORDER BY DATE_TRUNC('month', criado_em)
+      WHERE condominio_id IN (${ph}) AND data_abertura >= CURRENT_DATE - INTERVAL '6 months'
+      GROUP BY TO_CHAR(data_abertura, 'Mon'), DATE_TRUNC('month', data_abertura)
+      ORDER BY DATE_TRUNC('month', data_abertura)
     `, ids),
     // Produtividade por funcionário
     query(`

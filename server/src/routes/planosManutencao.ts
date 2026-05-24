@@ -67,7 +67,8 @@ router.post('/', validate(planoManutencaoSchema), async (req: AuthRequest, res: 
   const {
     titulo, descricao, equipamentoId, categoriaEquipamento,
     frequencia, diaExecucao, itensVerificacao, responsavelId,
-    fornecedorId, custoEstimado, autoGerarOs, status, condominioId
+    fornecedorId, custoEstimado, autoGerarOs, status, condominioId,
+    emailAviso1, emailAviso2, diasAviso, vencimento1, vencimento2, vencimento3, imagem,
   } = req.body;
 
   if (!condominioId || !ids.includes(condominioId)) {
@@ -75,22 +76,26 @@ router.post('/', validate(planoManutencaoSchema), async (req: AuthRequest, res: 
     return;
   }
 
-  const proximaExecucao = calcularProximaExecucao(frequencia || 'mensal', null, diaExecucao || 1);
+  const proximaExecucao = vencimento1 || calcularProximaExecucao(frequencia || 'mensal', null, diaExecucao || 1);
 
   const row = await queryOne(
     `INSERT INTO planos_manutencao (
       titulo, descricao, equipamento_id, categoria_equipamento,
       frequencia, dia_execucao, itens_verificacao, responsavel_id,
       fornecedor_id, custo_estimado, proxima_execucao, auto_gerar_os,
-      status, condominio_id, criado_por
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+      status, condominio_id, criado_por,
+      email_aviso_1, email_aviso_2, dias_aviso,
+      vencimento_1, vencimento_2, vencimento_3, imagem
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
     RETURNING *`,
     [
       titulo, descricao, equipamentoId || null, categoriaEquipamento || null,
       frequencia || 'mensal', diaExecucao || 1,
       JSON.stringify(itensVerificacao || []), responsavelId || null,
       fornecedorId || null, custoEstimado || 0, proximaExecucao,
-      autoGerarOs !== false, status || 'ativo', condominioId, req.user!.id
+      autoGerarOs !== false, status || 'ativo', condominioId, req.user!.id,
+      emailAviso1 || null, emailAviso2 || null, diasAviso ?? 7,
+      vencimento1 || null, vencimento2 || null, vencimento3 || null, imagem || null,
     ]
   );
   res.status(201).json(row);
@@ -102,28 +107,37 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
   const {
     titulo, descricao, equipamentoId, categoriaEquipamento,
     frequencia, diaExecucao, itensVerificacao, responsavelId,
-    fornecedorId, custoEstimado, autoGerarOs, status
+    fornecedorId, custoEstimado, autoGerarOs, status,
+    emailAviso1, emailAviso2, diasAviso, vencimento1, vencimento2, vencimento3, imagem,
   } = req.body;
 
   const planoAtual = await queryOne<any>('SELECT * FROM planos_manutencao WHERE id = $1 AND condominio_id = ANY($2)', [req.params.id, ids]);
-  const proximaExecucao = (frequencia && frequencia !== planoAtual?.frequencia)
-    ? calcularProximaExecucao(frequencia, planoAtual?.ultima_execucao, diaExecucao || planoAtual?.dia_execucao || 1)
-    : undefined;
+  const proximaExecucao = vencimento1
+    ? vencimento1
+    : (frequencia && frequencia !== planoAtual?.frequencia
+        ? calcularProximaExecucao(frequencia, planoAtual?.ultima_execucao, diaExecucao || planoAtual?.dia_execucao || 1)
+        : undefined);
 
   const row = await queryOne(
     `UPDATE planos_manutencao SET
       titulo=$1, descricao=$2, equipamento_id=$3, categoria_equipamento=$4,
       frequencia=$5, dia_execucao=$6, itens_verificacao=$7, responsavel_id=$8,
       fornecedor_id=$9, custo_estimado=$10, auto_gerar_os=$11, status=$12,
-      ${proximaExecucao ? 'proxima_execucao=$14,' : ''} atualizado_em=NOW()
-     WHERE id=$13 AND condominio_id = ANY($${proximaExecucao ? 15 : 14}) RETURNING *`,
+      email_aviso_1=$14, email_aviso_2=$15, dias_aviso=$16,
+      vencimento_1=$17, vencimento_2=$18, vencimento_3=$19, imagem=$20,
+      ${proximaExecucao ? 'proxima_execucao=$22,' : ''}
+      aviso_enviado_em=NULL,
+      atualizado_em=NOW()
+     WHERE id=$13 AND condominio_id = ANY($21) RETURNING *`,
     [
       titulo, descricao, equipamentoId || null, categoriaEquipamento || null,
       frequencia, diaExecucao, JSON.stringify(itensVerificacao || []),
       responsavelId || null, fornecedorId || null, custoEstimado || 0,
       autoGerarOs !== false, status, req.params.id,
+      emailAviso1 || null, emailAviso2 || null, diasAviso ?? 7,
+      vencimento1 || null, vencimento2 || null, vencimento3 || null, imagem || null,
+      ids,
       ...(proximaExecucao ? [proximaExecucao] : []),
-      ids
     ]
   );
   if (!row) { res.status(404).json({ error: 'Plano não encontrado' }); return; }

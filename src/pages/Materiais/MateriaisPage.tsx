@@ -11,7 +11,7 @@ import { compartilharConteudo, imprimirElemento, gerarPdfDeElemento } from '../.
 import { Plus, Package, Mail, Search, X, Hash, ArrowDownCircle, ArrowUpCircle, Camera, Mic, MicOff, FileText, Image, Building2, CheckCircle, Send } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useDemo } from '../../contexts/DemoContext';
-import { materiais as materiaisApi, condominios as condominiosApi } from '../../services/api';
+import { materiais as materiaisApi, condominios as condominiosApi, usuarios as usuariosApi } from '../../services/api';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import Pagination from '../../components/Common/Pagination';
 import { usePagination } from '../../hooks/usePagination';
@@ -85,7 +85,10 @@ const MateriaisPage: React.FC = () => {
     fotos: string[];
     notaFiscalUrl: string | null;
     audioUrl: string | null;
-  }>({ tipo: 'entrada', quantidade: '', observacao: '', fotos: [], notaFiscalUrl: null, audioUrl: null });
+    funcionarioId: string;
+    funcionarioNome: string;
+  }>({ tipo: 'entrada', quantidade: '', observacao: '', fotos: [], notaFiscalUrl: null, audioUrl: null, funcionarioId: '', funcionarioNome: '' });
+  const [funcionariosList, setFuncionariosList] = useState<{ id: string; nome: string; role: string }[]>([]);
   const [gravandoAudio, setGravandoAudio] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -96,9 +99,11 @@ const MateriaisPage: React.FC = () => {
     Promise.all([
       materiaisApi.list(),
       condominiosApi.list().catch(() => []),
-    ]).then(([mats, conds]) => {
+      usuariosApi.list().catch(() => []),
+    ]).then(([mats, conds, users]) => {
       setMateriais(mats as Material[]);
       setCondominiosList((conds as any[]).map(c => c.nome));
+      setFuncionariosList((users as any[]).filter(u => u.role === 'funcionario' && (u.ativo !== false)).map(u => ({ id: u.id, nome: u.nome, role: u.role })));
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
@@ -155,13 +160,18 @@ const MateriaisPage: React.FC = () => {
 
       setForm({ nome: '', categoria: 'Limpeza', unidade: 'un', qtd: '', min: '', custo: '', email: '', condominio: condominiosList[0] || 'Residencial Aurora' });
       setShowModal(false);
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   /* ── Abrir Modal Movimentação ── */
   const abrirMovimentacao = (mat: Material, tipo: 'entrada' | 'saida') => {
     setMovMaterial(mat);
-    setMovForm({ tipo, quantidade: '', observacao: '', fotos: [], notaFiscalUrl: null, audioUrl: null });
+    const ehFuncionario = usuario?.role === 'funcionario';
+    setMovForm({
+      tipo, quantidade: '', observacao: '', fotos: [], notaFiscalUrl: null, audioUrl: null,
+      funcionarioId: ehFuncionario ? (usuario?.id || '') : '',
+      funcionarioNome: ehFuncionario ? (usuario?.nome || '') : '',
+    });
     setShowMovModal(true);
   };
 
@@ -184,7 +194,7 @@ const MateriaisPage: React.FC = () => {
         audioUrl: movForm.audioUrl,
         fotos: movForm.fotos,
         notaFiscalUrl: movForm.notaFiscalUrl,
-        funcionario: usuario?.nome || 'Funcionário Atual',
+        funcionario: movForm.funcionarioNome || usuario?.nome || 'Funcionário Atual',
       }) as Movimentacao;
       setMovimentacoes(prev => [...prev, mov]);
       setMateriais(prev => prev.map(m => {
@@ -193,7 +203,7 @@ const MateriaisPage: React.FC = () => {
         return { ...m, qtd: novaQtd };
       }));
       setShowMovModal(false);
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   /* ── Fotos ── */
@@ -494,8 +504,20 @@ const MateriaisPage: React.FC = () => {
           </div>
           <div className={styles.formGroupFull}>
             <label className={styles.formLabel}>📧 E-mail para Notificação de Quantidade Mínima</label>
-            <input type="email" className={styles.formInput} placeholder="email@exemplo.com" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} />
-            <span className={styles.emailHint}>Ao atingir a quantidade mínima, uma notificação será enviada para este e-mail.</span>
+            <input
+              type="email"
+              className={styles.formInput}
+              placeholder="email@exemplo.com"
+              value={form.email}
+              onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+              disabled={!ehGestor}
+              title={!ehGestor ? 'Apenas síndico, administradora ou master podem editar este e-mail.' : undefined}
+            />
+            <span className={styles.emailHint}>
+              {ehGestor
+                ? 'Ao atingir a quantidade mínima, uma notificação será enviada para este e-mail.'
+                : 'Apenas síndico, administradora ou master podem editar este campo.'}
+            </span>
           </div>
           <button className={styles.formSubmit} onClick={criarMaterial}>
             <Plus size={18} /> Cadastrar Material
@@ -542,6 +564,32 @@ const MateriaisPage: React.FC = () => {
               >
                 <ArrowUpCircle size={16} /> Saída (Retirada)
               </button>
+            </div>
+
+            {/* Funcionário responsável pela retirada */}
+            <div className={styles.formGroupFull}>
+              <label className={styles.formLabel}>👤 Funcionário responsável</label>
+              {usuario?.role === 'funcionario' ? (
+                <input
+                  className={styles.formInput}
+                  value={usuario?.nome || ''}
+                  disabled
+                  title="Você está logado como funcionário — o registro será feito em seu nome."
+                />
+              ) : (
+                <select
+                  className={styles.formInput}
+                  value={movForm.funcionarioId}
+                  onChange={e => {
+                    const id = e.target.value;
+                    const f = funcionariosList.find(x => x.id === id);
+                    setMovForm(p => ({ ...p, funcionarioId: id, funcionarioNome: f?.nome || '' }));
+                  }}
+                >
+                  <option value="">Selecione o funcionário...</option>
+                  {funcionariosList.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                </select>
+              )}
             </div>
 
             {/* Quantidade */}

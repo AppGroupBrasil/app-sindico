@@ -15,7 +15,7 @@ import {
   UserCheck, Building2, Home, Settings, Copy, Download, Mail, Phone, Siren, CalendarPlus, Fingerprint, MapPin, Clock, LogIn, LogOut as LogOutIcon, ClipboardCheck, Hourglass, Play, Square, Flag, PenTool, RotateCcw, Camera, Wrench, Printer, Heart
 } from 'lucide-react';
 import { useDemo } from '../../contexts/DemoContext';
-import { qrcodes as qrcodesApi } from '../../services/api';
+import { qrcodes as qrcodesApi, qrChat as qrChatApi } from '../../services/api';
 import styles from './QRCode.module.css';
 
 /* ═══════════════════════════════════════
@@ -47,7 +47,7 @@ const FUNCOES_QR: { id: string; label: string; rota: string }[] = [
 type BlocoTipo =
   | 'titulo' | 'subtitulo' | 'texto' | 'galeria' | 'descricao'
   | 'checklist' | 'status' | 'prioridade' | 'avaliacao_estrela'
-  | 'avaliacao_escala' | 'pergunta' | 'aviso' | 'comunicado' | 'feedback' | 'urgencia' | 'agendar_servico' | 'pesquisa_satisfacao' | 'controle_ponto' | 'sla_tempo' | 'assinatura_digital' | 'ocorrencia' | 'manutencao';
+  | 'avaliacao_escala' | 'pergunta' | 'aviso' | 'comunicado' | 'feedback' | 'urgencia' | 'agendar_servico' | 'pesquisa_satisfacao' | 'controle_ponto' | 'sla_tempo' | 'assinatura_digital' | 'ocorrencia' | 'manutencao' | 'chat_morador';
 
 interface BlocoConfig {
   id: string;
@@ -112,6 +112,7 @@ const BLOCOS_DISPONIVEIS: { tipo: BlocoTipo; label: string; icone: React.ReactNo
   { tipo: 'assinatura_digital', label: 'Assinatura Digital', icone: <PenTool size={18} />, cor: '#4527a0' },
   { tipo: 'ocorrencia', label: 'Informar Ocorrência', icone: <Camera size={18} />, cor: '#c62828' },
   { tipo: 'manutencao', label: 'Problema de Manutenção', icone: <Wrench size={18} />, cor: '#e65100' },
+  { tipo: 'chat_morador', label: '★ Chat com o Morador', icone: <MessageCircle size={18} />, cor: '#25D366' },
 ];
 
 const BLOCOS_PADRAO = ['Bloco A', 'Bloco B', 'Bloco C', 'Bloco D', 'Torre 1', 'Torre 2', 'Funcionário', 'Prestador'];
@@ -138,6 +139,125 @@ function formatarDuracao(ms: number): string {
 }
 
 const PERFIL_LABELS: Record<string, string> = { master: 'Master', administrador: 'Administrador', supervisor: 'Supervisor', funcionario: 'Funcionário' };
+
+/* ── Componente Chat Morador ↔ Síndico ── */
+interface ChatMensagem {
+  id: string;
+  remetente: 'morador' | 'sindico';
+  remetenteNome: string;
+  texto: string;
+  imagem: string | null;
+  dataHora: string;
+}
+
+const ChatMoradorBloco: React.FC<{ blocoId: string }> = ({ blocoId }) => {
+  const { usuario } = useAuth();
+  const ehSindico = !!usuario && (usuario.role === 'supervisor' || usuario.role === 'administrador' || usuario.role === 'master');
+  const [mensagens, setMensagens] = useState<ChatMensagem[]>([]);
+  const [texto, setTexto] = useState('');
+  const [imagem, setImagem] = useState<string | null>(null);
+
+  const carregar = async () => {
+    try {
+      const rows = await qrChatApi.list(blocoId);
+      setMensagens(rows.map((r: any) => ({
+        id: r.id,
+        remetente: r.remetente,
+        remetenteNome: r.remetenteNome || r.remetente_nome,
+        texto: r.texto || '',
+        imagem: r.imagem || null,
+        dataHora: r.criadoEm || r.criado_em,
+      })));
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => {
+    carregar();
+    const t = setInterval(carregar, 5000);
+    return () => clearInterval(t);
+  }, [blocoId]);
+
+  const enviar = async () => {
+    if (!texto.trim() && !imagem) return;
+    try {
+      await qrChatApi.send(blocoId, {
+        remetente: ehSindico ? 'sindico' : 'morador',
+        remetenteNome: usuario?.nome || (ehSindico ? 'Síndico' : 'Morador'),
+        texto: texto.trim() || undefined,
+        imagem: imagem || undefined,
+      });
+      setTexto('');
+      setImagem(null);
+      await carregar();
+    } catch (err: any) {
+      alert(err?.message || 'Erro ao enviar mensagem.');
+    }
+  };
+
+  const onPickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setImagem(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const linkChat = `${window.location.origin}/qrcode#chat-${blocoId}`;
+  const copiarLink = () => { navigator.clipboard?.writeText(linkChat).then(() => alert('Link do chat copiado!')); };
+
+  return (
+    <div style={{ border: '1.5px solid #25D366', borderRadius: 10, overflow: 'hidden', background: '#f0fdf4' }}>
+      <div style={{ background: '#25D366', color: '#fff', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 13, fontWeight: 600 }}>
+        <span><MessageCircle size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />Chat Morador ↔ Síndico</span>
+        <button type="button" onClick={copiarLink}
+          style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.4)', padding: '3px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <Copy size={11} /> Copiar link
+        </button>
+      </div>
+      <div style={{ maxHeight: 280, overflowY: 'auto', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {mensagens.length === 0 && (
+          <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 12.5, padding: 18 }}>
+            Nenhuma mensagem ainda. Envie a primeira para iniciar a conversa.
+          </div>
+        )}
+        {mensagens.map(m => {
+          const meu = (ehSindico && m.remetente === 'sindico') || (!ehSindico && m.remetente === 'morador');
+          return (
+            <div key={m.id} style={{ alignSelf: meu ? 'flex-end' : 'flex-start', maxWidth: '78%', background: meu ? '#dcfce7' : '#fff', border: '1px solid ' + (meu ? '#86efac' : '#e5e7eb'), padding: 8, borderRadius: 10 }}>
+              <div style={{ fontSize: 11, color: '#374151', fontWeight: 600 }}>
+                {m.remetente === 'sindico' ? '👔 ' : '🏠 '}{m.remetenteNome}
+                <span style={{ fontWeight: 400, color: '#6b7280', marginLeft: 6 }}>{new Date(m.dataHora).toLocaleString('pt-BR')}</span>
+              </div>
+              {m.imagem && <img src={m.imagem} alt="" style={{ maxWidth: '100%', borderRadius: 6, marginTop: 4 }} />}
+              {m.texto && <div style={{ fontSize: 13, marginTop: 4, whiteSpace: 'pre-wrap' }}>{m.texto}</div>}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ borderTop: '1px solid #d1fae5', padding: 8, background: '#fff' }}>
+        {imagem && (
+          <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src={imagem} alt="" style={{ maxHeight: 60, borderRadius: 6, border: '1px solid #e5e7eb' }} />
+            <button type="button" onClick={() => setImagem(null)} style={{ border: '1px solid #e5e7eb', background: '#fff', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontSize: 11 }}>Remover</button>
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
+          <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder={ehSindico ? 'Responda ao morador...' : 'Digite sua mensagem ao síndico...'}
+            rows={2} style={{ flex: 1, padding: 8, border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 13, resize: 'vertical' }} />
+          <label style={{ cursor: 'pointer', padding: 8, border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }} title="Anexar imagem">
+            <Camera size={16} />
+            <input type="file" accept="image/*" onChange={onPickImage} hidden />
+          </label>
+          <button type="button" onClick={enviar}
+            style={{ background: '#25D366', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+            Enviar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /* ── Componente Controle de Ponto ── */
 const ControlePontoBloco: React.FC<{
@@ -228,7 +348,11 @@ const ControlePontoBloco: React.FC<{
         longitude: geoData?.lon,
         endereco: geoData?.endereco,
       });
-    } catch {}
+    } catch (err: any) {
+      alert('Falha ao registrar entrada: ' + (err?.message || 'tente novamente'));
+      setCarregando(false);
+      return;
+    }
     setRegistros(prev => [reg, ...prev]);
     setRespostas(prev => ({ ...prev, [blocoId]: { ...reg, tipo: 'entrada' } }));
     setCarregando(false);
@@ -265,7 +389,11 @@ const ControlePontoBloco: React.FC<{
         endereco: geoData?.endereco,
         permanencia,
       });
-    } catch {}
+    } catch (err: any) {
+      alert('Falha ao registrar saída: ' + (err?.message || 'tente novamente'));
+      setCarregando(false);
+      return;
+    }
     setRegistros(prev => [reg, ...prev]);
     setRespostas(prev => ({ ...prev, [blocoId]: { ...reg, tipo: 'saida', permanencia } }));
     setPontoAtivo(null);
@@ -411,7 +539,9 @@ const SlaTempoBloco: React.FC<{
       setCategoria('');
       setDescricao('');
       setRespostas(prev => ({ ...prev, [blocoId]: updated }));
-    } catch {}
+    } catch (err: any) {
+      alert('Falha ao registrar ocorrência: ' + (err?.message || 'tente novamente'));
+    }
   };
 
   const mudarStatus = async (id: string, novoStatus: 'em_atendimento' | 'resolvido') => {
@@ -424,7 +554,9 @@ const SlaTempoBloco: React.FC<{
         encerramento: novoStatus === 'resolvido' ? (updated.encerramento || new Date().toISOString()) : r.encerramento,
       } : r));
       setRespostas(prev => ({ ...prev, [blocoId]: registros }));
-    } catch {}
+    } catch (err: any) {
+      alert('Falha ao atualizar status: ' + (err?.message || 'tente novamente'));
+    }
   };
 
   const tempoDecorrido = (desde: string): string => formatarTempoSla(agora - new Date(desde).getTime());
@@ -1551,6 +1683,10 @@ const QRCodePage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {bloco.tipo === 'chat_morador' && (
+          <ChatMoradorBloco blocoId={bloco.id} />
+        )}
       </div>
     );
   };
@@ -1568,6 +1704,7 @@ const QRCodePage: React.FC = () => {
           'Defina se deseja dispensar a identificação do respondente',
           'Gere o QR Code e compartilhe — qualquer pessoa pode escanear e responder',
           'Acompanhe as respostas recebidas em cada QR Code',
+          'Todas as reclamações, ocorrências, urgências e problemas de manutenção enviados serão direcionados automaticamente para a aba "Solicitação dos Moradores".',
         ]}
       />
 

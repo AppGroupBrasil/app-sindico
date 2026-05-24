@@ -643,9 +643,12 @@
 }
 
 @media (max-width: 768px) {
+  /* Sidebar vira tela cheia em modo grid de ícones */
   .sidebar {
     transform: translateX(-100%);
-    width: 280px;
+    width: 100vw !important;
+    max-width: 100vw;
+    background: linear-gradient(160deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%) !important;
   }
 
   .mobileOpen {
@@ -672,7 +675,81 @@
     pointer-events: all;
   }
 
-  .collapseBtn {
-    display: none;
+  .collapseBtn { display: none; }
+
+  /* Esconder controles que não fazem sentido no modo grid mobile */
+  .reorderBar,
+  .favSection,
+  .favDivider { display: none !important; }
+
+  /* Nav vira grid 3 colunas */
+  .nav {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 16px;
+    overflow-y: auto;
   }
+
+  /* Cada item vira card quadrado com ícone em cima e label embaixo */
+  .navItem {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center;
+    gap: 8px !important;
+    padding: 14px 6px !important;
+    aspect-ratio: 1 / 1;
+    background: rgba(255, 255, 255, 0.10) !important;
+    border-radius: 14px !important;
+    color: #ffffff !important;
+    text-align: center !important;
+    white-space: normal !important;
+    backdrop-filter: blur(6px);
+    transition: transform 0.15s ease, background 0.2s ease;
+  }
+
+  .navItem:active {
+    transform: scale(0.96);
+    background: rgba(255, 255, 255, 0.22) !important;
+  }
+
+  .navItem.active {
+    background: rgba(255, 255, 255, 0.28) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  }
+
+  .navIcon {
+    color: #ffffff;
+  }
+
+  .navIcon svg {
+    width: 28px !important;
+    height: 28px !important;
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+  }
+
+  .navLabel {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    font-weight: 500 !important;
+    color: #ffffff !important;
+    word-break: break-word;
+  }
+
+  .activeIndicator { display: none !important; }
+
+  /* Topo do sidebar no mobile (header + branding) — fica mais compacto */
+  .header {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .userInfo {
+    background: rgba(255, 255, 255, 0.10) !important;
+    color: #ffffff !important;
+  }
+
+  .userName, .userRole { color: #ffffff !important; }
 }

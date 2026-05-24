@@ -159,7 +159,7 @@ const TarefasPage: React.FC = () => {
     try {
       const criada = await tarefasApi.create(payload) as TarefaAgendada;
       setTarefas(prev => [criada, ...prev]);
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
     setFormTitulo(''); setFormDescricao(''); setFormFuncionario('');
     setFormCondominio(''); setFormBloco(''); setFormLocal('');
     setFormRecorrencia('unica'); setFormData(''); setFormDias([]);
@@ -172,7 +172,7 @@ const TarefasPage: React.FC = () => {
     try {
       await tarefasApi.remove(id);
       setTarefas(prev => prev.filter(t => t.id !== id));
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
   };
 
   /* ═══ Minhas tarefas (funcionário) ═══ */
@@ -663,7 +663,7 @@ const TarefaCardItem: React.FC<{
         reporteProblema: reporteTexto || undefined,
       }) as ExecucaoTarefa;
       setExecucoes(prev => [...prev, nova]);
-    } catch (err) { console.error(err); }
+    } catch (err: any) { alert(err?.message || 'Erro ao salvar.'); console.error(err); }
     setAberto(false);
     setSalvando(false);
   };

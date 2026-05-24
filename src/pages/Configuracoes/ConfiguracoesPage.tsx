@@ -11,6 +11,7 @@ import { CORES_DISPONIVEIS } from '../../types';
 import { Palette, Moon, Sun, Upload, Check, Monitor, QrCode, Printer, RotateCcw } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useDemo } from '../../contexts/DemoContext';
+import EmailConfigCard from './EmailConfigCard';
 import styles from './Configuracoes.module.css';
 
 const FUNCOES_QR: { id: string; label: string; rota: string }[] = [
@@ -116,6 +117,13 @@ const ConfiguracoesPage: React.FC = () => {
         onImprimir={() => imprimirElemento('config-content')}
         onGerarPdf={() => gerarPdfDeElemento('config-content', 'configuracoes')}
       />
+
+      {/* Provedor de E-mail (apenas master) */}
+      {usuario?.role === 'master' && (
+        <div style={{ marginBottom: '1cm' }}>
+          <EmailConfigCard />
+        </div>
+      )}
 
       {/* Modo Escuro */}
       <Card padding="md">

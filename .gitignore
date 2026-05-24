@@ -21,3 +21,6 @@ server/uploads/
 .idea/
 *.swp
 .DS_Store
+
+# Scripts de teste manual com credenciais
+test-functions*.sh

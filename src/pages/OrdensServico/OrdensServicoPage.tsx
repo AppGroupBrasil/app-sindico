@@ -49,8 +49,12 @@ const OrdensServicoPage: React.FC = () => {
   const [modalNova, setModalNova] = useState(false);
 
   useEffect(() => {
-    Promise.all([osApi.list(), condominiosApi.list()])
-      .then(([rows, conds]) => {
+    Promise.allSettled([osApi.list(), condominiosApi.list()])
+      .then(([osRes, condsRes]) => {
+        const rows: any[] = osRes.status === 'fulfilled' ? (osRes.value as any[]) : [];
+        const conds: any[] = condsRes.status === 'fulfilled' ? (condsRes.value as any[]) : [];
+        if (osRes.status === 'rejected') console.error('Erro ao carregar OS:', osRes.reason);
+        if (condsRes.status === 'rejected') console.error('Erro ao carregar condomínios:', condsRes.reason);
         setOrdens(rows.map((r: any) => ({
           id: r.id,
           protocolo: r.protocolo,
@@ -73,8 +77,8 @@ const OrdensServicoPage: React.FC = () => {
           avaliacaoComentario: r.avaliacaoComentario,
         })));
         setCondominiosList(conds);
+        if (conds.length > 0) setNovaCond(conds[0].id);
       })
-      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
@@ -83,7 +87,8 @@ const OrdensServicoPage: React.FC = () => {
   const [novaDesc, setNovaDesc] = useState('');
   const [novaTipo, setNovaTipo] = useState<'limpeza' | 'manutencao' | 'emergencia' | 'preventiva'>('limpeza');
   const [novaPrioridade, setNovaPrioridade] = useState<'baixa' | 'media' | 'alta' | 'urgente'>('media');
-  const [novaCond, setNovaCond] = useState('c1');
+  const [novaCond, setNovaCond] = useState('');
+  const [erroNova, setErroNova] = useState('');
   const [novaLocal, setNovaLocal] = useState('');
 
   const filtered = useMemo(() => {
@@ -120,7 +125,9 @@ const OrdensServicoPage: React.FC = () => {
 
   const criarOS = async () => {
     if (!tentarAcao()) return;
-    if (!novaTitulo.trim()) return;
+    setErroNova('');
+    if (!novaCond) { setErroNova('Selecione um condomínio.'); return; }
+    if (!novaTitulo.trim()) { setErroNova('Informe o título da O.S.'); return; }
 
     try {
       const created: any = await osApi.create({
@@ -147,10 +154,12 @@ const OrdensServicoPage: React.FC = () => {
         criadoPor: created.criadoPor,
       };
       setOrdens(prev => [nova, ...prev]);
-    } catch { alert('Erro ao criar O.S.'); }
-    setNovaTitulo(''); setNovaDesc(''); setNovaTipo('limpeza');
-    setNovaPrioridade('media'); setNovaCond(condominiosList[0]?.id || ''); setNovaLocal('');
-    setModalNova(false);
+      setNovaTitulo(''); setNovaDesc(''); setNovaTipo('limpeza');
+      setNovaPrioridade('media'); setNovaCond(condominiosList[0]?.id || ''); setNovaLocal('');
+      setModalNova(false);
+    } catch (e: any) {
+      setErroNova(e?.message || 'Erro ao criar O.S.');
+    }
   };
 
   return (
@@ -345,14 +354,21 @@ const OrdensServicoPage: React.FC = () => {
             <div className={styles.formGroup}>
               <label>Condomínio</label>
               <select value={novaCond} onChange={e => setNovaCond(e.target.value)}>
+                <option value="">Selecione...</option>
                 {condominiosList.map((c: any) => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </select>
+              {condominiosList.length === 0 && (
+                <small style={{ color: '#dc2626' }}>Nenhum condomínio cadastrado. Crie um em "Cadastro de Condomínios".</small>
+              )}
             </div>
             <div className={styles.formGroup}>
               <label>Local</label>
               <input placeholder="Ex: Bloco A - 3º andar" value={novaLocal} onChange={e => setNovaLocal(e.target.value)} />
             </div>
           </div>
+          {erroNova && (
+            <div style={{ background: '#fee2e2', color: '#991b1b', padding: 10, borderRadius: 8, margin: '8px 0' }}>{erroNova}</div>
+          )}
           <button type="button" className={styles.submitBtn} onClick={criarOS}>
             <Plus size={18} /> Criar Ordem de Serviço
           </button>

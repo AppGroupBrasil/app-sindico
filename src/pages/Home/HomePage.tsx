@@ -10,6 +10,7 @@ import {
   CheckCircle2, ArrowRight, Menu, X
 } from 'lucide-react';
 import styles from './HomePage.module.css';
+import logoAppSindico from '../../assets/logo.png';
 
 /* ── Dados ── */
 
@@ -144,9 +145,7 @@ const HomePage: React.FC = () => {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <div className={styles.logo}>
-            <div className={styles.logoIcon}>
-              <span>AS</span>
-            </div>
+            <img src={logoAppSindico} alt="App Síndico" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'contain' }} />
             <div className={styles.logoText}>
               <span className={styles.logoTitle}>APP SÍNDICO</span>
               <span className={styles.logoSubtitle}>CONDOMÍNIO</span>
@@ -396,9 +395,7 @@ const HomePage: React.FC = () => {
           <div className={styles.footerGrid}>
             <div className={styles.footerBrand}>
               <div className={styles.logo}>
-                <div className={styles.logoIcon}>
-                  <span>AS</span>
-                </div>
+                <img src={logoAppSindico} alt="App Síndico" style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'contain' }} />
                 <span className={styles.footerBrandName}>APP SÍNDICO</span>
               </div>
               <p className={styles.footerDesc}>

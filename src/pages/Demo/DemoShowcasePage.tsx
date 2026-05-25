@@ -24,15 +24,9 @@ const DemoShowcasePage: React.FC = () => {
     <div className={styles.page}>
       <div className={styles.container}>
         <div className={styles.topBanner}>
-          <div style={{ fontSize: 18, marginBottom: 6 }}>👀 Esta é uma <strong>tela de demonstração</strong></div>
-          <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.5 }}>
-            Os blocos abaixo mostram <strong>visualmente</strong> como cada funcionalidade aparece no sistema, com dados de exemplo.
-            <br />
-            <strong>Aqui eles não são interativos</strong> — não dá pra clicar, editar ou abrir. Quando você criar sua conta,
-            cada bloco vira uma área real do sistema, com tudo clicável, editável e com as informações do seu condomínio.
-          </div>
-          <a href="/cadastro" style={{ display: 'inline-block', marginTop: 12, background: '#422006', color: '#fbbf24', padding: '10px 20px', borderRadius: 10, fontWeight: 800, textDecoration: 'none' }}>
-            ✨ Criar minha conta grátis e usar de verdade
+          👀 <strong>Tela apenas de demonstração</strong> — visual sem interação. Ao criar sua conta, tudo abaixo fica clicável.
+          <a href="/cadastro" style={{ marginLeft: 12, background: '#422006', color: '#fbbf24', padding: '6px 14px', borderRadius: 8, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', display: 'inline-block' }}>
+            Criar conta grátis
           </a>
         </div>
 

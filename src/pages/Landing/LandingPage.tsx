@@ -635,6 +635,15 @@ const LandingPage: React.FC = () => {
                 🎬 Ver Demo da Revista
               </a>
             </div>
+            <div style={{ marginTop: 14, display: 'flex', justifyContent: 'center' }}>
+              <button
+                onClick={() => navigate('/cadastro')}
+                className={styles.btnPrimario}
+                style={{ background: 'linear-gradient(135deg, #facc15, #ca8a04)', color: '#422006', boxShadow: '0 8px 22px rgba(202,138,4,0.45)', padding: '16px 32px', fontSize: 17, fontWeight: 800 }}
+              >
+                ✨ Cadastre-se grátis
+              </button>
+            </div>
           </div>
         </div>
       </section>

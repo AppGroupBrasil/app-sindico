@@ -265,6 +265,15 @@ const Sidebar: React.FC = () => {
         <Menu size={24} />
       </button>
 
+      <button
+        className={`${styles.mobileHomeBtn} ${isMobileBarUser ? styles.hideAlways : ''}`}
+        onClick={() => { navigate('/inicio'); setMobileOpen(false); }}
+        title="Ir para a tela de ícones"
+        aria-label="Ir para o início"
+      >
+        <LayoutGrid size={22} />
+      </button>
+
       <div className={`${styles.overlay} ${mobileOpen ? styles.overlayVisible : ''}`} onClick={() => setMobileOpen(false)} />
 
       <aside

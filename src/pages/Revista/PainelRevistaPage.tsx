@@ -165,20 +165,24 @@ const PainelRevistaPage: React.FC = () => {
             >
               <Plus size={16} style={{ verticalAlign: -3, marginRight: 6 }} /> Adicionar nova página
             </button>
-            <button
+            <a
+              href="/revista/visualizar?demo=1"
+              target="_blank"
+              rel="noopener noreferrer"
               className={styles.publishBtn}
-              style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)', color: '#422006' }}
-              onClick={() => window.open('/revista/visualizar?demo=1', '_blank')}
+              style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)', color: '#422006', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
             >
               🎬 Ver demo
-            </button>
-            <button
+            </a>
+            <a
+              href="/revista/visualizar"
+              target="_blank"
+              rel="noopener noreferrer"
               className={styles.publishBtn}
-              style={{ background: 'linear-gradient(135deg, #6366F1, #4338CA)' }}
-              onClick={() => window.open('/revista/visualizar', '_blank')}
+              style={{ background: 'linear-gradient(135deg, #6366F1, #4338CA)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
             >
               <Eye size={16} style={{ verticalAlign: -3, marginRight: 6 }} /> Visualizar
-            </button>
+            </a>
             <button className={`${styles.publishBtn} ${revista.publicada ? styles.published : ''}`} onClick={publicar}>
               <Eye size={16} style={{ verticalAlign: -3, marginRight: 6 }} />
               {revista.publicada ? 'Despublicar' : 'Publicar revista'}

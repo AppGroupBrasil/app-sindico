@@ -534,3 +534,11 @@ export const upload = {
     return data.url;
   },
 };
+
+export const revistas = {
+  getByCondominio: (condominioId: string) => request<any>(`/revistas/${condominioId}`),
+  updateCapa: (revistaId: string, data: any) => put(`/revistas/${revistaId}`, data),
+  addPagina: (revistaId: string, data: any) => post(`/revistas/${revistaId}/paginas`, data),
+  updatePagina: (paginaId: string, data: any) => put(`/revistas/paginas/${paginaId}`, data),
+  removePagina: (paginaId: string) => del(`/revistas/paginas/${paginaId}`),
+};

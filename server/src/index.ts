@@ -58,6 +58,7 @@ import calendarioRoutes from './routes/calendario.js';
 import exportRoutes from './routes/export.js';
 
 import contratosRoutes from './routes/contratos.js';
+import revistasRoutes from './routes/revistas.js';
 
 import { iniciarScheduler } from './scheduler.js';
 import { initSocket } from './socket.js';
@@ -187,6 +188,7 @@ protectedRouter.use('/calendario', calendarioRoutes);
 protectedRouter.use('/export', exportRoutes);
 
 protectedRouter.use('/contratos', contratosRoutes);
+protectedRouter.use('/revistas', revistasRoutes);
 
 
 // ── Health check (before auth middleware) ──

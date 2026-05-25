@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, ClipboardCheck, Wrench, Calendar,
   Package, Search, MapPin, Settings, LogOut, ChevronLeft,
     ChevronRight, Building2, BarChart3, Shield, Menu, FileWarning, Eye, QrCode, ScanLine, Flame, CalendarCheck, BookOpen, CalendarClock, Contact, Megaphone, Columns3, GripVertical, RotateCcw, Bell, User, Star,
-  Cog, Store, CalendarRange, DollarSign, Activity, FileText, MessageSquareText, ShieldCheck, CalendarDays, MessageCircle, Crown, Clock, Receipt, EyeOff
+  Cog, Store, CalendarRange, DollarSign, Activity, FileText, MessageSquareText, ShieldCheck, CalendarDays, MessageCircle, Crown, Clock, Receipt, EyeOff, LayoutGrid
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import logoImg from '../../assets/logo.png';

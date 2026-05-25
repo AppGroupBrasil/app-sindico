@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Pencil, Trash2, Plus, Image as ImageIcon, Eye, BookOpen, Save, X } from 'lucide-react';
+import { Pencil, Trash2, Plus, Image as ImageIcon, Eye, BookOpen, Save, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { revistas as revistasApi, condominios as condominiosApi, upload as uploadApi } from '../../services/api';
 import { categories } from './data/categories';
 import styles from './PainelRevistaPage.module.css';
@@ -41,6 +41,8 @@ const PainelRevistaPage: React.FC = () => {
   const [editPaginaId, setEditPaginaId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<Partial<Pagina>>({});
   const [addModal, setAddModal] = useState<{ open: boolean; fromCategoria?: string; mode: 'choose' | 'pickCategory' }>({ open: false, mode: 'choose' });
+  // -1 = capa, 0..N-1 = página correspondente
+  const [paginaIdx, setPaginaIdx] = useState<number>(-1);
   const capaFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -84,7 +86,9 @@ const PainelRevistaPage: React.FC = () => {
     if (!revista) return;
     try {
       const nova = await revistasApi.addPagina(revista.id, { categoria, titulo: '', texto: '', fotos: [] });
-      setRevista({ ...revista, paginas: [...revista.paginas, nova] });
+      const novasPaginas = [...revista.paginas, nova];
+      setRevista({ ...revista, paginas: novasPaginas });
+      setPaginaIdx(novasPaginas.length - 1);
       setEditPaginaId(nova.id);
       setEditDraft({ titulo: '', texto: '', fotos: [] });
       setAddModal({ open: false, mode: 'choose' });
@@ -168,7 +172,33 @@ const PainelRevistaPage: React.FC = () => {
           </div>
         </div>
 
+        {/* NAVEGADOR DE PÁGINAS */}
+        <div className={styles.navBar}>
+          <button
+            className={styles.navBtn}
+            onClick={() => setPaginaIdx(i => Math.max(-1, i - 1))}
+            disabled={paginaIdx <= -1}
+            aria-label="Página anterior"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <div className={styles.navLabel}>
+            {paginaIdx === -1
+              ? `Capa · ${revista.paginas.length} ${revista.paginas.length === 1 ? 'página' : 'páginas'}`
+              : `Página ${paginaIdx + 1} de ${revista.paginas.length}`}
+          </div>
+          <button
+            className={styles.navBtn}
+            onClick={() => setPaginaIdx(i => Math.min(revista.paginas.length - 1, i + 1))}
+            disabled={paginaIdx >= revista.paginas.length - 1}
+            aria-label="Próxima página"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+
         {/* CAPA */}
+        {paginaIdx === -1 && (
         <div className={styles.cover}>
           <div className={styles.coverPreview} style={coverStyle}>
             {efeitos.includes('faixa-topo') && (
@@ -238,19 +268,15 @@ const PainelRevistaPage: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
 
-        {/* PÁGINAS */}
-        {revista.paginas.length === 0 ? (
-          <div className={styles.emptyState}>
-            <h3>Sua revista ainda não tem páginas</h3>
-            <p>Use o botão <strong>Adicionar nova página</strong> no topo para começar.</p>
-          </div>
-        ) : (
-          revista.paginas.map(pagina => {
-            const cat = categories.find(c => c.id === pagina.categoria);
-            const isEditing = editPaginaId === pagina.id;
+        {/* PÁGINAS — uma por vez */}
+        {paginaIdx >= 0 && revista.paginas[paginaIdx] && (() => {
+          const pagina = revista.paginas[paginaIdx];
+          const cat = categories.find(c => c.id === pagina.categoria);
+          const isEditing = editPaginaId === pagina.id;
             return (
-              <div key={pagina.id} className={styles.pageCard} style={{ borderLeftColor: cat?.color || '#1E88E5' }}>
+              <div key={pagina.id} className={`${styles.pageCard} ${styles.pageCardFull}`} style={{ borderLeftColor: cat?.color || '#1E88E5' }}>
                 <div className={styles.pageHead}>
                   <span className={styles.pageCategory} style={{ background: (cat?.color || '#1E88E5') + '22', color: cat?.color || '#0D47A1' }}>
                     {cat?.name || pagina.categoria}
@@ -323,7 +349,13 @@ const PainelRevistaPage: React.FC = () => {
                 )}
               </div>
             );
-          })
+          })()}
+
+        {paginaIdx === -1 && revista.paginas.length === 0 && (
+          <div className={styles.emptyState}>
+            <h3>Sua revista ainda não tem páginas</h3>
+            <p>Use o botão <strong>Adicionar nova página</strong> no topo para começar — cada categoria escolhida vira uma página.</p>
+          </div>
         )}
 
       </div>

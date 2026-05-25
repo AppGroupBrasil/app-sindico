@@ -174,7 +174,6 @@ const LoginPage: React.FC = () => {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
               {[
-                { label: 'Portal do Morador', to: '/portal/login' },
                 { label: 'Portal do Síndico', to: '/login' },
                 { label: 'Portal da Administradora', to: '/login' },
                 { label: 'Portal do Funcionário', to: '/login' },

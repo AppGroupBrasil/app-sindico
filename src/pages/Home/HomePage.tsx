@@ -439,7 +439,6 @@ const HomePage: React.FC = () => {
               <ul>
                 <li><button onClick={() => navigate('/login')}>Entrar</button></li>
                 <li><button onClick={() => navigate('/cadastro')}>Cadastre-se</button></li>
-                <li><button onClick={() => navigate('/portal/login')}>Portal Morador</button></li>
               </ul>
             </div>
             <div className={styles.footerLinks}>

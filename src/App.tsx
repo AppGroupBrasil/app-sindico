@@ -116,8 +116,10 @@ const App: React.FC = () => {
   return (
     <>
     <Routes>
-      {/* Home pública */}
-      <Route path="/" element={<HomePage />} />
+      {/* Home pública — se logado, vai direto pros tiles */}
+      <Route path="/" element={
+        !carregando && usuario && !usuario.bloqueado ? <Navigate to="/inicio" replace /> : <HomePage />
+      } />
 
       <Route path="/login" element={
         !carregando && usuario && !usuario.bloqueado ? <Navigate to="/inicio" replace /> : <LoginPage />

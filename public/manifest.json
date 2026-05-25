@@ -3,7 +3,7 @@
   "name": "App Síndico",
   "short_name": "App Síndico",
   "description": "Sistema completo de gestão condominial com 30+ módulos: ordens de serviço, checklists, escalas, vistorias, QR Code e muito mais.",
-  "start_url": "/dashboard",
+  "start_url": "/inicio",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f5f7fa",

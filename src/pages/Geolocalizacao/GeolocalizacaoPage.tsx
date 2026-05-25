@@ -213,9 +213,40 @@ const GeolocalizacaoPage: React.FC = () => {
               <span>Atualização automática a cada 30s</span>
               <span className={styles.mapTimestamp}>Última: {formatarHora(ultimaAtualizacao)}</span>
             </div>
-            <button className={styles.mapRefresh} onClick={atualizarAgora}>
-              <RefreshCw size={14} /> Atualizar Agora
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className={styles.mapRefresh}
+                onClick={() => {
+                  if (!navigator.geolocation) { alert('Seu navegador não suporta geolocalização.'); return; }
+                  navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                      try {
+                        await geoApi.create({
+                          latitude: pos.coords.latitude,
+                          longitude: pos.coords.longitude,
+                          precisao: pos.coords.accuracy,
+                          local: 'Check-in manual',
+                          status: 'presente',
+                          horaChegada: new Date().toISOString(),
+                        });
+                        carregarDados();
+                      } catch (e: any) {
+                        alert('Não foi possível registrar a posição: ' + (e?.message || 'erro'));
+                      }
+                    },
+                    (err) => alert('Não foi possível obter sua localização: ' + err.message),
+                    { enableHighAccuracy: true, timeout: 10000 }
+                  );
+                }}
+                style={{ background: 'linear-gradient(135deg, #1E88E5, #0D47A1)', color: '#fff', border: 'none' }}
+                title="Usar GPS do dispositivo e registrar minha posição agora"
+              >
+                <Navigation size={14} /> Registrar minha posição
+              </button>
+              <button className={styles.mapRefresh} onClick={atualizarAgora}>
+                <RefreshCw size={14} /> Atualizar Agora
+              </button>
+            </div>
           </div>
 
           <div className={styles.mapWrapper}>

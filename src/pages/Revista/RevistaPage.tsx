@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Play, Pause, BookOpen, ScrollText, Layers } from 'lucide-react';
 import { revistas as revistasApi, condominios as condominiosApi } from '../../services/api';
 import { categories } from './data/categories';
+import { demoRevista } from './data/demoRevista';
 import styles from './RevistaPage.module.css';
 
 interface Pagina { id: string; categoria: string; ordem: number; titulo: string; texto: string; fotos: string[]; }
@@ -9,11 +11,14 @@ interface Revista { id: string; titulo: string; subtitulo: string | null; capa_u
 type Modo = 'stories' | 'scroll' | 'elegante';
 
 const RevistaPage: React.FC = () => {
-  const [revista, setRevista] = useState<Revista | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [params] = useSearchParams();
+  const isDemo = params.get('demo') === '1';
+  const [revista, setRevista] = useState<Revista | null>(isDemo ? (demoRevista as Revista) : null);
+  const [loading, setLoading] = useState(!isDemo);
   const [modo, setModo] = useState<Modo>('elegante');
 
   useEffect(() => {
+    if (isDemo) return;
     (async () => {
       try {
         const conds = await condominiosApi.list();
@@ -22,13 +27,18 @@ const RevistaPage: React.FC = () => {
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
-  }, []);
+  }, [isDemo]);
 
   if (loading) return <div className={styles.center}>Carregando revista...</div>;
   if (!revista) return <div className={styles.center}>Revista não encontrada.</div>;
 
   return (
     <div className={styles.viewer}>
+      {isDemo && (
+        <div className={styles.demoBadge}>
+          🎬 Você está vendo uma <strong>revista de demonstração</strong> — explore os 3 modos abaixo
+        </div>
+      )}
       <div className={styles.modeBar}>
         <button className={`${styles.modeBtn} ${modo === 'elegante' ? styles.active : ''}`} onClick={() => setModo('elegante')}>
           <BookOpen size={16} /> Folhear

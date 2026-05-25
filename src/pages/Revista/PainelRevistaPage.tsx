@@ -167,6 +167,13 @@ const PainelRevistaPage: React.FC = () => {
             </button>
             <button
               className={styles.publishBtn}
+              style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)', color: '#422006' }}
+              onClick={() => window.open('/revista/visualizar?demo=1', '_blank')}
+            >
+              🎬 Ver demo
+            </button>
+            <button
+              className={styles.publishBtn}
               style={{ background: 'linear-gradient(135deg, #6366F1, #4338CA)' }}
               onClick={() => window.open('/revista/visualizar', '_blank')}
             >

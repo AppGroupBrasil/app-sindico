@@ -621,9 +621,20 @@ const LandingPage: React.FC = () => {
             <p className={styles.ctaDescricao}>
               Acesse agora e comece a organizar ordens de serviço, checklists, escalas, vistorias e muito mais.
             </p>
-            <button className={styles.btnPrimario} onClick={() => navigate('/login')}>
-              Acessar o Sistema <ArrowRight size={18} />
-            </button>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button className={styles.btnPrimario} onClick={() => navigate('/login')}>
+                Acessar o Sistema <ArrowRight size={18} />
+              </button>
+              <a
+                href="/revista/visualizar?demo=1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.btnPrimario}
+                style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)', color: '#422006', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+              >
+                🎬 Ver Demo da Revista
+              </a>
+            </div>
           </div>
         </div>
       </section>

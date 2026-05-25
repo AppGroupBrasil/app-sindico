@@ -28,6 +28,7 @@ export interface MenuItem {
 export const menuItems: MenuItem[] = [
   { id: 'sindico', label: 'Painel do Síndico', icon: <Crown size={20} />, rota: '/sindico', minRole: 3, simples: true },
   { id: 'dashboard', label: 'Painel Analítico', icon: <LayoutDashboard size={20} />, rota: '/painel-analitico', minRole: 1, simples: true },
+  { id: 'revista', label: 'Revista do Síndico', icon: <BookOpen size={20} />, rota: '/revista', minRole: 2, simples: true, tooltip: 'Crie e gerencie a revista digital do condomínio com 41 categorias e 8 layouts.' },
   { id: 'vencimentos', label: 'Agenda de Vencimentos', icon: <CalendarClock size={20} />, rota: '/vencimentos', minRole: 2, simples: true },
   { id: 'condominios', label: 'Cadastro de Condomínios', icon: <Building2 size={20} />, rota: '/condominios', minRole: 2, simples: true },
   { id: 'moradores', label: 'Cadastro de Moradores', icon: <Contact size={20} />, rota: '/moradores', minRole: 2, simples: true },

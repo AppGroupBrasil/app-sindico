@@ -7,6 +7,11 @@ import LoginPage from './pages/Auth/LoginPage';
 import BloqueadoPage from './pages/Auth/BloqueadoPage';
 import DashboardPage from './pages/Dashboard/DashboardPage';
 import HomeAppPage from './pages/HomeApp/HomeAppPage';
+import PainelRevistaPage from './pages/Revista/PainelRevistaPage';
+import RevistaPage from './pages/Revista/RevistaPage';
+import MoradorRevistaPage from './pages/Revista/MoradorRevistaPage';
+import TarefaRevistaPage from './pages/Revista/TarefaRevistaPage';
+import FuncionariosRevistaPage from './pages/Revista/FuncionariosPage';
 import UsuariosPage from './pages/Usuarios/UsuariosPage';
 import CondominiosPage from './pages/Condominios/CondominiosPage';
 import OrdensServicoPage from './pages/OrdensServico/OrdensServicoPage';
@@ -151,6 +156,11 @@ const App: React.FC = () => {
         <Route path="inicio" element={<HomeAppPage />} />
         <Route path="dashboard" element={<Navigate to="/inicio" replace />} />
         <Route path="painel-analitico" element={<DashboardPage />} />
+        <Route path="revista" element={<RoleGuard minRole={2}><PainelRevistaPage /></RoleGuard>} />
+        <Route path="revista/visualizar" element={<RevistaPage />} />
+        <Route path="revista/morador" element={<MoradorRevistaPage />} />
+        <Route path="revista/tarefa/:id" element={<TarefaRevistaPage />} />
+        <Route path="revista/funcionarios" element={<RoleGuard minRole={2}><FuncionariosRevistaPage /></RoleGuard>} />
         <Route path="condominios" element={<RoleGuard minRole={2}><CondominiosPage /></RoleGuard>} />
         <Route path="usuarios" element={<RoleGuard minRole={3}><UsuariosPage /></RoleGuard>} />
         <Route path="ordens-servico" element={<OrdensServicoPage />} />

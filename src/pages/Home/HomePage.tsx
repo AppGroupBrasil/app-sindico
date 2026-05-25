@@ -147,7 +147,9 @@ const HomePage: React.FC = () => {
           <div className={styles.logo}>
             <img src={logoAppSindico} alt="App Síndico" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'contain' }} />
             <div className={styles.logoText}>
-              <span className={styles.logoTitle}>APP SÍNDICO</span>
+              <span className={styles.logoTitle}>
+                <span className={styles.word1}>APP</span><span className={styles.word2}>SÍNDICO</span>
+              </span>
               <span className={styles.logoSubtitle}>CONDOMÍNIO</span>
             </div>
           </div>

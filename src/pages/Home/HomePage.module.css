@@ -98,22 +98,21 @@
 }
 
 .logoTitle {
-  font-size: 20px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #1E3A5F, #D4AF37);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 22px;
+  font-weight: 800;
   line-height: 1;
+  letter-spacing: 0.04em;
 }
 
+.logoTitle .word1 { color: #0D47A1; }
+.logoTitle .word2 { color: #42A5F5; margin-left: 6px; }
+
 .logoSubtitle {
-  margin-top: 2px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.3em;
-  color: var(--home-primary);
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #0D47A1;
   line-height: 1;
 }
 

@@ -203,7 +203,7 @@ const HomePage: React.FC = () => {
               Os moradores sabem o que você faz pelo condomínio? Não basta fazer — mostre tudo o que você realiza!
             </p>
             <p className={styles.heroDescLight}>
-              Gerencie seu condomínio com elegância e transparência. Revistas digitais, chamados, funcionários e muito mais.
+              Desenvolvemos, sem nenhum custo adicional, funções sob medida de acordo com a sua necessidade.
             </p>
             <div className={styles.heroCtas}>
               <button onClick={() => navigate('/demo')} className={styles.btnPrimaryLg}>

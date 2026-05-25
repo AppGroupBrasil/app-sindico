@@ -153,10 +153,19 @@ const PainelRevistaPage: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.topBar}>
           <div className={styles.topTitle}><BookOpen size={22} style={{ verticalAlign: -4, marginRight: 8 }} />Revista do Síndico</div>
-          <button className={`${styles.publishBtn} ${revista.publicada ? styles.published : ''}`} onClick={publicar}>
-            <Eye size={16} style={{ verticalAlign: -3, marginRight: 6 }} />
-            {revista.publicada ? 'Despublicar' : 'Publicar revista'}
-          </button>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button
+              className={styles.bigAddBtn}
+              style={{ padding: '12px 20px', fontSize: 14 }}
+              onClick={() => setAddModal({ open: true, mode: 'pickCategory' })}
+            >
+              <Plus size={16} style={{ verticalAlign: -3, marginRight: 6 }} /> Adicionar nova página
+            </button>
+            <button className={`${styles.publishBtn} ${revista.publicada ? styles.published : ''}`} onClick={publicar}>
+              <Eye size={16} style={{ verticalAlign: -3, marginRight: 6 }} />
+              {revista.publicada ? 'Despublicar' : 'Publicar revista'}
+            </button>
+          </div>
         </div>
 
         {/* CAPA */}
@@ -320,11 +329,6 @@ const PainelRevistaPage: React.FC = () => {
           })
         )}
 
-        {revista.paginas.length > 0 && (
-          <button className={styles.bigAddBtn} style={{ width: '100%' }} onClick={() => setAddModal({ open: true, mode: 'pickCategory' })}>
-            <Plus size={18} style={{ verticalAlign: -3, marginRight: 6 }} /> Adicionar página de outra categoria
-          </button>
-        )}
       </div>
 
       {/* MODAL ADICIONAR */}

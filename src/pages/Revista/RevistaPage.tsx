@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Play, Pause, BookOpen, ScrollText, Layers } from 'lucide-react';
 import { revistas as revistasApi, condominios as condominiosApi } from '../../services/api';
 import { categories } from './data/categories';
@@ -23,6 +23,7 @@ const MODOS: { id: Modo; label: string; icon: string }[] = [
 
 const RevistaPage: React.FC = () => {
   const [params] = useSearchParams();
+  const { slug } = useParams<{ slug?: string }>();
   const isDemo = params.get('demo') === '1';
   const [revista, setRevista] = useState<Revista | null>(isDemo ? (demoRevista as Revista) : null);
   const [loading, setLoading] = useState(!isDemo);
@@ -32,13 +33,17 @@ const RevistaPage: React.FC = () => {
     if (isDemo) return;
     (async () => {
       try {
-        const conds = await condominiosApi.list();
-        const first = (conds as any[])[0];
-        if (first) setRevista(await revistasApi.getByCondominio(first.id));
+        if (slug) {
+          setRevista(await revistasApi.getPublic(slug));
+        } else {
+          const conds = await condominiosApi.list();
+          const first = (conds as any[])[0];
+          if (first) setRevista(await revistasApi.getByCondominio(first.id));
+        }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
-  }, [isDemo]);
+  }, [isDemo, slug]);
 
   if (loading) return <div className={styles.center}>Carregando revista...</div>;
   if (!revista) return <div className={styles.center}>Revista não encontrada.</div>;

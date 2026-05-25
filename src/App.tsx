@@ -133,6 +133,7 @@ const App: React.FC = () => {
       <Route path="/cadastro" element={<CadastroPage />} />
       <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
       <Route path="/demo/:perfil" element={<DemoEntryPage />} />
+      <Route path="/r/:slug" element={<RevistaPage />} />
 
       {/* Portal do Morador */}
       <Route path="/portal/login" element={

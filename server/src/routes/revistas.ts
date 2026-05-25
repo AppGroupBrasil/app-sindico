@@ -4,6 +4,28 @@ import { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
+// Rota pública (será montada SEM auth no index.ts)
+export const publicRouter = Router();
+
+function gerarSlug() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+async function garantirSlug(revista: any): Promise<any> {
+  if (revista.slug) return revista;
+  for (let tentativa = 0; tentativa < 5; tentativa++) {
+    const slug = gerarSlug();
+    try {
+      const updated = await queryOne<any>(
+        `UPDATE revistas SET slug = $2 WHERE id = $1 RETURNING *`,
+        [revista.id, slug]
+      );
+      if (updated) return updated;
+    } catch { /* slug colidiu, tenta outro */ }
+  }
+  return revista;
+}
+
 // Garante 1 revista por condomínio (cria se não existir)
 async function ensureRevista(condominioId: string, userId?: string) {
   let r = await queryOne<any>(
@@ -16,8 +38,27 @@ async function ensureRevista(condominioId: string, userId?: string) {
       [condominioId, userId || null]
     );
   }
+  r = await garantirSlug(r);
   return r;
 }
+
+// Rota pública: GET /api/revistas-publica/:slug  → revista + páginas (sem auth)
+publicRouter.get('/:slug', async (req, res) => {
+  try {
+    const r = await queryOne<any>(
+      `SELECT id, titulo, subtitulo, capa_url, cor_capa, efeitos, slug FROM revistas WHERE slug = $1 AND publicada = true`,
+      [req.params.slug]
+    );
+    if (!r) return res.status(404).json({ error: 'Revista não encontrada ou não publicada' });
+    const paginas = await query<any>(
+      `SELECT id, categoria, ordem, titulo, texto, fotos FROM revista_paginas WHERE revista_id = $1 ORDER BY ordem ASC, criado_em ASC`,
+      [r.id]
+    );
+    res.json({ ...r, paginas });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // GET /api/revistas/:condominioId  → revista + páginas
 router.get('/:condominioId', async (req: AuthRequest, res: Response) => {

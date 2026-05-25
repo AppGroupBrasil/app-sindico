@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Pencil, Trash2, Plus, Image as ImageIcon, Eye, BookOpen, Save, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, Plus, Image as ImageIcon, Eye, BookOpen, Save, X, ChevronLeft, ChevronRight, Share2, Copy, MessageCircle } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { revistas as revistasApi, condominios as condominiosApi, upload as uploadApi } from '../../services/api';
 import { categories } from './data/categories';
 import styles from './PainelRevistaPage.module.css';
@@ -22,6 +23,7 @@ interface Revista {
   cor_capa: string;
   efeitos: string[];
   publicada: boolean;
+  slug?: string;
   paginas: Pagina[];
 }
 
@@ -41,6 +43,7 @@ const PainelRevistaPage: React.FC = () => {
   const [editPaginaId, setEditPaginaId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<Partial<Pagina>>({});
   const [addModal, setAddModal] = useState<{ open: boolean; fromCategoria?: string; mode: 'choose' | 'pickCategory' }>({ open: false, mode: 'choose' });
+  const [shareOpen, setShareOpen] = useState(false);
   // -1 = capa, 0..N-1 = página correspondente
   const [paginaIdx, setPaginaIdx] = useState<number>(-1);
   const capaFileRef = useRef<HTMLInputElement>(null);
@@ -174,6 +177,13 @@ const PainelRevistaPage: React.FC = () => {
             >
               🎬 Ver demo
             </a>
+            <button
+              className={styles.publishBtn}
+              style={{ background: 'linear-gradient(135deg, #16a34a, #14532d)' }}
+              onClick={() => setShareOpen(true)}
+            >
+              <Share2 size={16} style={{ verticalAlign: -3, marginRight: 6 }} /> Compartilhar
+            </button>
             <a
               href="/revista/visualizar"
               target="_blank"
@@ -377,6 +387,55 @@ const PainelRevistaPage: React.FC = () => {
         )}
 
       </div>
+
+      {/* MODAL COMPARTILHAR */}
+      {shareOpen && (() => {
+        const link = revista.slug ? `${window.location.origin}/r/${revista.slug}` : '';
+        const wppText = encodeURIComponent(`📖 Saiu a nova edição da revista do nosso condomínio! Veja aqui: ${link}`);
+        const wppUrl = `https://wa.me/?text=${wppText}`;
+        const copiar = () => { navigator.clipboard.writeText(link); alert('Link copiado!'); };
+        return (
+          <div className={styles.modalBg} onClick={() => setShareOpen(false)}>
+            <div className={styles.modal} onClick={e => e.stopPropagation()}>
+              <h3 className={styles.modalTitle}>Compartilhar a revista</h3>
+              {!revista.publicada && (
+                <div style={{ background: '#fef3c7', color: '#78350f', padding: 12, borderRadius: 10, marginBottom: 14, fontSize: 13 }}>
+                  ⚠ A revista ainda não está publicada. Clique em <strong>Publicar revista</strong> antes para que o link funcione para os moradores.
+                </div>
+              )}
+              {link ? (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 16, background: '#f8fafc', borderRadius: 12 }}>
+                    <QRCodeCanvas value={link} size={180} level="M" includeMargin />
+                    <div style={{ fontSize: 12, color: '#64748b' }}>QR Code da revista — imprima para portaria, elevador, mural</div>
+                  </div>
+                  <div className={styles.field} style={{ marginTop: 16 }}>
+                    <label>Link público</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input type="text" readOnly value={link} style={{ flex: 1, padding: 10, border: '1px solid #cbd5e1', borderRadius: 10, fontSize: 13 }} />
+                      <button onClick={copiar} className={styles.btnPrimary} style={{ whiteSpace: 'nowrap' }}><Copy size={14} /> Copiar</button>
+                    </div>
+                  </div>
+                  <a
+                    href={wppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.btnPrimary}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg, #25D366, #128C7E)', marginTop: 12, textDecoration: 'none', padding: '14px 18px' }}
+                  >
+                    <MessageCircle size={18} /> Compartilhar pelo WhatsApp
+                  </a>
+                </>
+              ) : (
+                <div style={{ padding: 20, textAlign: 'center', color: '#64748b' }}>Gerando link público...</div>
+              )}
+              <div className={styles.modalActions}>
+                <button className={styles.btnSecondary} onClick={() => setShareOpen(false)}>Fechar</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* MODAL ADICIONAR */}
       {addModal.open && (

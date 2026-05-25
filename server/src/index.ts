@@ -58,7 +58,7 @@ import calendarioRoutes from './routes/calendario.js';
 import exportRoutes from './routes/export.js';
 
 import contratosRoutes from './routes/contratos.js';
-import revistasRoutes from './routes/revistas.js';
+import revistasRoutes, { publicRouter as revistasPublicRouter } from './routes/revistas.js';
 
 import { iniciarScheduler } from './scheduler.js';
 import { initSocket } from './socket.js';
@@ -128,6 +128,7 @@ app.use('/api', (_req, res, next) => {
 // ── Rotas públicas ──
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/portal', authLimiter, portalMoradorRoutes);
+app.use('/api/revistas-publica', revistasPublicRouter);
 
 // ── Rotas protegidas ──
 const protectedRouter = express.Router();

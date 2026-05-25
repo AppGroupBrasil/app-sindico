@@ -541,4 +541,9 @@ export const revistas = {
   addPagina: (revistaId: string, data: any) => post(`/revistas/${revistaId}/paginas`, data),
   updatePagina: (paginaId: string, data: any) => put(`/revistas/paginas/${paginaId}`, data),
   removePagina: (paginaId: string) => del(`/revistas/paginas/${paginaId}`),
+  getPublic: async (slug: string) => {
+    const res = await fetch(`${API_BASE}/revistas-publica/${slug}`);
+    if (!res.ok) throw new Error('Revista não encontrada');
+    return res.json();
+  },
 };

@@ -29,11 +29,9 @@ export const menuItems: MenuItem[] = [
   { id: 'sindico', label: 'Painel do Síndico', icon: <Crown size={20} />, rota: '/sindico', minRole: 3, simples: true },
   { id: 'dashboard', label: 'Painel Analítico', icon: <LayoutDashboard size={20} />, rota: '/painel-analitico', minRole: 1, simples: true },
   { id: 'revista', label: 'Revista do Síndico', icon: <BookOpen size={20} />, rota: '/revista', minRole: 2, simples: true, tooltip: 'Crie e gerencie a revista digital do condomínio com 41 categorias e 8 layouts.' },
+  { id: 'cadastros', label: 'Cadastros', icon: <Contact size={20} />, rota: '/cadastros', minRole: 2, simples: true, tooltip: 'Cadastros guiados: condomínios, usuários, moradores e permissões.' },
   { id: 'vencimentos', label: 'Agenda de Vencimentos', icon: <CalendarClock size={20} />, rota: '/vencimentos', minRole: 2, simples: true },
-  { id: 'condominios', label: 'Cadastro de Condomínios', icon: <Building2 size={20} />, rota: '/condominios', minRole: 2, simples: true },
-  { id: 'moradores', label: 'Cadastro de Moradores', icon: <Contact size={20} />, rota: '/moradores', minRole: 2, simples: true },
-  { id: 'permissoes', label: 'Cadastro de Permissões', icon: <Shield size={20} />, rota: '/permissoes', minRole: 3, simples: true },
-  { id: 'usuarios', label: 'Cadastro de Usuários', icon: <Users size={20} />, rota: '/usuarios', minRole: 3, simples: true, tooltip: 'Cadastre aqui os usuários que vão acessar o aplicativo ou acessar o sistema.' },
+  // Cadastros (Condomínios, Moradores, Permissões, Usuários) movidos para o hub /cadastros
   { id: 'calendario', label: 'Calendário Manutenção', icon: <CalendarDays size={20} />, rota: '/calendario', minRole: 2, simples: true },
   { id: 'checklists', label: 'Checklists', icon: <ClipboardCheck size={20} />, rota: '/checklists', minRole: 1, simples: true },
   { id: 'comunicados', label: 'Comunicados / Avisos', icon: <Megaphone size={20} />, rota: '/comunicados', minRole: 2, simples: true },

@@ -158,11 +158,11 @@ const HomePage: React.FC = () => {
             <a href="#funcionalidades">Funcionalidades</a>
             <a href="#categorias">Categorias</a>
             <a href="#planos">Planos</a>
-            <button onClick={() => navigate('/demo/sindico')} className={styles.navLink}>Demo</button>
+            <button onClick={() => navigate('/demo')} className={styles.navLink}>Demo</button>
           </nav>
 
           <div className={styles.headerActions}>
-            <button onClick={() => navigate('/demo/sindico')} className={styles.btnOutline}>Ver Demo</button>
+            <button onClick={() => navigate('/demo')} className={styles.btnOutline}>Ver Demo</button>
             <button onClick={() => navigate('/cadastro')} className={styles.btnPrimary}>Cadastre-se</button>
           </div>
 
@@ -176,7 +176,7 @@ const HomePage: React.FC = () => {
             <a href="#funcionalidades" onClick={() => setMenuOpen(false)}>Funcionalidades</a>
             <a href="#categorias" onClick={() => setMenuOpen(false)}>Categorias</a>
             <a href="#planos" onClick={() => setMenuOpen(false)}>Planos</a>
-            <button onClick={() => { setMenuOpen(false); navigate('/demo/sindico'); }}>Demo</button>
+            <button onClick={() => { setMenuOpen(false); navigate('/demo'); }}>Demo</button>
             <button onClick={() => { setMenuOpen(false); navigate('/cadastro'); }} className={styles.btnPrimary}>Cadastre-se</button>
           </div>
         )}
@@ -206,7 +206,7 @@ const HomePage: React.FC = () => {
               Gerencie seu condomínio com elegância e transparência. Revistas digitais, chamados, funcionários e muito mais.
             </p>
             <div className={styles.heroCtas}>
-              <button onClick={() => navigate('/demo/sindico')} className={styles.btnPrimaryLg}>
+              <button onClick={() => navigate('/demo')} className={styles.btnPrimaryLg}>
                 Ver Demo
                 <ArrowRight size={20} />
               </button>
@@ -410,7 +410,7 @@ const HomePage: React.FC = () => {
                 <li><a href="#funcionalidades">Funcionalidades</a></li>
                 <li><a href="#categorias">Categorias</a></li>
                 <li><a href="#planos">Planos</a></li>
-                <li><button onClick={() => navigate('/demo/sindico')}>Demo</button></li>
+                <li><button onClick={() => navigate('/demo')}>Demo</button></li>
               </ul>
             </div>
             <div className={styles.footerLinks}>

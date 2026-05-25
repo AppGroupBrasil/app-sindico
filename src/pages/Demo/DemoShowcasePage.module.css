@@ -1,0 +1,222 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  color: #1a1a2e;
+  padding: 24px 20px 80px;
+}
+
+.container { max-width: 1100px; margin: 0 auto; }
+
+.topBanner {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  color: #422006;
+  padding: 14px 18px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 22px;
+  box-shadow: 0 6px 18px rgba(217,119,6,0.25);
+}
+
+.topBanner a { color: #422006; text-decoration: underline; font-weight: 800; }
+
+.hero {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.heroTitle {
+  font-size: 32px;
+  color: #0D47A1;
+  margin: 0 0 8px;
+}
+
+.heroSubtitle {
+  color: #475569;
+  font-size: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.section {
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sectionIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1E88E5, #0D47A1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sectionTitle { font-size: 19px; font-weight: 800; color: #0D47A1; margin: 0; line-height: 1.2; }
+.sectionDesc { font-size: 13px; color: #64748b; margin: 2px 0 0; }
+
+/* KPIs */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.kpiCard {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+}
+.kpiLabel { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+.kpiValue { font-size: 28px; font-weight: 800; color: #0f172a; margin-top: 4px; }
+.kpiHint { font-size: 12px; color: #16a34a; margin-top: 2px; font-weight: 600; }
+.kpiHintBad { color: #dc2626; }
+
+/* Lista genérica */
+.listRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+.listRow:last-child { margin-bottom: 0; }
+.listMain { flex: 1; min-width: 0; }
+.listTitle { font-weight: 700; font-size: 14px; color: #0f172a; }
+.listSub { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.badgeOk { background: #dcfce7; color: #166534; }
+.badgeWarn { background: #fef3c7; color: #92400e; }
+.badgeDanger { background: #fee2e2; color: #991b1b; }
+.badgeInfo { background: #dbeafe; color: #1e40af; }
+
+/* Kanban (Quadro) */
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.kanbanCol {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 200px;
+}
+.kanbanColTitle { font-size: 13px; font-weight: 800; color: #0D47A1; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.kanbanCard {
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  font-size: 13px;
+}
+
+/* Galeria de moradores */
+.moradoresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+.moradorCard {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+.moradorAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  margin: 0 auto 8px;
+  background: linear-gradient(135deg, #1E88E5, #0D47A1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+/* Mapa simulado */
+.miniMap {
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  border-radius: 12px;
+  height: 220px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #93c5fd;
+}
+.mapPin {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  background: #dc2626;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 3px solid #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Comunicados */
+.comuCard {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-left: 5px solid #f59e0b;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+.comuTit { font-weight: 800; color: #78350f; margin-bottom: 4px; }
+.comuTexto { font-size: 13px; color: #78350f; }
+
+/* CTA fim */
+.ctaEnd {
+  background: linear-gradient(135deg, #0D47A1, #1565C0);
+  color: #fff;
+  border-radius: 18px;
+  padding: 32px 22px;
+  text-align: center;
+  margin-top: 28px;
+}
+.ctaEnd h2 { margin: 0 0 8px; font-size: 24px; }
+.ctaEnd p { margin: 0 0 16px; opacity: 0.92; }
+.ctaBtn {
+  display: inline-block;
+  padding: 14px 28px;
+  background: #fbbf24;
+  color: #422006;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+@media (max-width: 700px) {
+  .kanban { grid-template-columns: 1fr; }
+  .heroTitle { font-size: 24px; }
+}

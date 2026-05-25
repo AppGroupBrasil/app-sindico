@@ -7,6 +7,7 @@ import LoginPage from './pages/Auth/LoginPage';
 import BloqueadoPage from './pages/Auth/BloqueadoPage';
 import DashboardPage from './pages/Dashboard/DashboardPage';
 import HomeAppPage from './pages/HomeApp/HomeAppPage';
+import CadastrosHubPage from './pages/Cadastros/CadastrosHubPage';
 import PainelRevistaPage from './pages/Revista/PainelRevistaPage';
 import RevistaPage from './pages/Revista/RevistaPage';
 import MoradorRevistaPage from './pages/Revista/MoradorRevistaPage';
@@ -36,6 +37,7 @@ import MoradoresPage from './pages/Moradores/MoradoresPage';
 import ComunicadosPage from './pages/Comunicados/ComunicadosPage';
 import QuadroAtividadesPage from './pages/QuadroAtividades/QuadroAtividadesPage';
 import DemoEntryPage from './pages/Demo/DemoEntryPage';
+import DemoShowcasePage from './pages/Demo/DemoShowcasePage';
 import CadastroPage from './pages/Auth/CadastroPage';
 import EsqueciSenhaPage from './pages/Auth/EsqueciSenhaPage';
 import PerfilPage from './pages/Perfil/PerfilPage';
@@ -133,6 +135,7 @@ const App: React.FC = () => {
       <Route path="/cadastro" element={<CadastroPage />} />
       <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
       <Route path="/demo/:perfil" element={<DemoEntryPage />} />
+      <Route path="/demo" element={<DemoShowcasePage />} />
       <Route path="/r/:slug" element={<RevistaPage />} />
 
       {/* Portal do Morador */}
@@ -155,6 +158,7 @@ const App: React.FC = () => {
         </ProtectedRoute>
       }>
         <Route path="inicio" element={<HomeAppPage />} />
+        <Route path="cadastros" element={<RoleGuard minRole={2}><CadastrosHubPage /></RoleGuard>} />
         <Route path="dashboard" element={<Navigate to="/inicio" replace />} />
         <Route path="painel-analitico" element={<DashboardPage />} />
         <Route path="revista" element={<RoleGuard minRole={2}><PainelRevistaPage /></RoleGuard>} />

@@ -243,10 +243,7 @@ const PainelRevistaPage: React.FC = () => {
         {revista.paginas.length === 0 ? (
           <div className={styles.emptyState}>
             <h3>Sua revista ainda não tem páginas</h3>
-            <p>Clique abaixo para adicionar a primeira página e escolher a categoria.</p>
-            <button className={styles.bigAddBtn} onClick={() => setAddModal({ open: true, mode: 'pickCategory' })}>
-              <Plus size={18} style={{ verticalAlign: -3, marginRight: 6 }} /> Adicionar primeira página
-            </button>
+            <p>Use o botão <strong>Adicionar nova página</strong> no topo para começar.</p>
           </div>
         ) : (
           revista.paginas.map(pagina => {
@@ -352,7 +349,12 @@ const PainelRevistaPage: React.FC = () => {
               </>
             ) : (
               <>
-                <h3 className={styles.modalTitle}>Escolha a categoria</h3>
+                <h3 className={styles.modalTitle}>Escolha a categoria da página</h3>
+                <p style={{ margin: '0 0 14px', color: '#475569', fontSize: 14, lineHeight: 1.5 }}>
+                  Cada página é uma seção da sua revista. Escolha abaixo o tema dela.
+                  Depois você poderá <strong>editar o título</strong>, escrever o <strong>texto</strong> e <strong>enviar fotos</strong>.
+                  Use o botão <strong>Adicionar</strong> em cada página para criar mais páginas da mesma seção ou de outra categoria.
+                </p>
                 <div className={styles.categoryGrid}>
                   {categories.map(cat => (
                     <button key={cat.id} onClick={() => addPagina(cat.id)} style={{ borderColor: cat.color }}>

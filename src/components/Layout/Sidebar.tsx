@@ -15,7 +15,7 @@ import logoImg from '../../assets/logo.png';
 import { notificacoes as notificacoesApi } from '../../services/api';
 import Coachmark from '../Common/Coachmark';
 
-interface MenuItem {
+export interface MenuItem {
   id: string;
   label: string;
   icon: React.ReactNode;
@@ -25,7 +25,7 @@ interface MenuItem {
   simples?: boolean;
 }
 
-const menuItems: MenuItem[] = [
+export const menuItems: MenuItem[] = [
   { id: 'sindico', label: 'Painel do Síndico', icon: <Crown size={20} />, rota: '/sindico', minRole: 3, simples: true },
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, rota: '/dashboard', minRole: 1, simples: true },
   { id: 'vencimentos', label: 'Agenda de Vencimentos', icon: <CalendarClock size={20} />, rota: '/vencimentos', minRole: 2, simples: true },

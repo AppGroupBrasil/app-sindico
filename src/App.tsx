@@ -6,6 +6,7 @@ import MainLayout from './components/Layout/MainLayout';
 import LoginPage from './pages/Auth/LoginPage';
 import BloqueadoPage from './pages/Auth/BloqueadoPage';
 import DashboardPage from './pages/Dashboard/DashboardPage';
+import HomeAppPage from './pages/HomeApp/HomeAppPage';
 import UsuariosPage from './pages/Usuarios/UsuariosPage';
 import CondominiosPage from './pages/Condominios/CondominiosPage';
 import OrdensServicoPage from './pages/OrdensServico/OrdensServicoPage';
@@ -119,7 +120,7 @@ const App: React.FC = () => {
       <Route path="/" element={<HomePage />} />
 
       <Route path="/login" element={
-        !carregando && usuario && !usuario.bloqueado ? <Navigate to="/dashboard" replace /> : <LoginPage />
+        !carregando && usuario && !usuario.bloqueado ? <Navigate to="/inicio" replace /> : <LoginPage />
       } />
       <Route path="/bloqueado" element={<BloqueadoPage />} />
       <Route path="/cadastro" element={<CadastroPage />} />
@@ -145,6 +146,7 @@ const App: React.FC = () => {
           <MainLayout />
         </ProtectedRoute>
       }>
+        <Route path="inicio" element={<HomeAppPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="condominios" element={<RoleGuard minRole={2}><CondominiosPage /></RoleGuard>} />
         <Route path="usuarios" element={<RoleGuard minRole={3}><UsuariosPage /></RoleGuard>} />

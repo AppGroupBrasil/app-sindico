@@ -24,7 +24,16 @@ const DemoShowcasePage: React.FC = () => {
     <div className={styles.page}>
       <div className={styles.container}>
         <div className={styles.topBanner}>
-          🎬 Você está vendo uma <strong>demonstração</strong> do APP Síndico — todos os dados abaixo são fictícios. <a href="/cadastro">Cadastre-se grátis</a> para começar de verdade.
+          <div style={{ fontSize: 18, marginBottom: 6 }}>👀 Esta é uma <strong>tela de demonstração</strong></div>
+          <div style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.5 }}>
+            Os blocos abaixo mostram <strong>visualmente</strong> como cada funcionalidade aparece no sistema, com dados de exemplo.
+            <br />
+            <strong>Aqui eles não são interativos</strong> — não dá pra clicar, editar ou abrir. Quando você criar sua conta,
+            cada bloco vira uma área real do sistema, com tudo clicável, editável e com as informações do seu condomínio.
+          </div>
+          <a href="/cadastro" style={{ display: 'inline-block', marginTop: 12, background: '#422006', color: '#fbbf24', padding: '10px 20px', borderRadius: 10, fontWeight: 800, textDecoration: 'none' }}>
+            ✨ Criar minha conta grátis e usar de verdade
+          </a>
         </div>
 
         <div className={styles.hero}>

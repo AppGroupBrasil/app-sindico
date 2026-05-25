@@ -52,7 +52,7 @@ export const menuItems: MenuItem[] = [
   { id: 'mapa-calor', label: 'Reclamações', icon: <Flame size={20} />, rota: '/mapa-calor', minRole: 3 },
   { id: 'relatorios', label: 'Relatórios', icon: <BarChart3 size={20} />, rota: '/relatorios', minRole: 2, simples: true },
   { id: 'roteiros', label: 'Roteiro de Execução', icon: <BookOpen size={20} />, rota: '/roteiros', minRole: 1 },
-  { id: 'reportes', label: 'Solicitação dos Moradores', icon: <FileWarning size={20} />, rota: '/reportes', minRole: 1, simples: true, tooltip: 'Solicitações enviadas pelos moradores através do QR Code (reclamações, ocorrências, urgências e problemas de manutenção).' },
+  { id: 'reportes', label: 'Solicitações dos Moradores', icon: <FileWarning size={20} />, rota: '/reportes', minRole: 1, simples: true, tooltip: 'Solicitações enviadas pelos moradores (reclamações, ocorrências, urgências e problemas de manutenção).' },
   { id: 'tarefas', label: 'Tarefas Agendadas', icon: <CalendarCheck size={20} />, rota: '/tarefas', minRole: 1, simples: true },
   { id: 'vistorias', label: 'Vistorias', icon: <Eye size={20} />, rota: '/vistorias', minRole: 1 },
 ];

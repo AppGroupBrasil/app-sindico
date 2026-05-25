@@ -535,6 +535,45 @@ export const upload = {
   },
 };
 
+// ── Central do Morador (público, sem auth) e chat de solicitações
+export const central = {
+  condominio: async (slug: string) => {
+    const r = await fetch(`${API_BASE}/m/${slug}`);
+    if (!r.ok) throw new Error('Condomínio não encontrado');
+    return r.json();
+  },
+  criarSolicitacao: async (slug: string, dados: any) => {
+    const r = await fetch(`${API_BASE}/m/${slug}/solicitacao`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados),
+    });
+    if (!r.ok) throw new Error((await r.json()).error || 'Erro ao criar');
+    return r.json();
+  },
+  getProtocolo: async (token: string) => {
+    const r = await fetch(`${API_BASE}/m/protocolo/${token}`);
+    if (!r.ok) throw new Error('Solicitação não encontrada');
+    return r.json();
+  },
+  responderMorador: async (token: string, dados: any) => {
+    const r = await fetch(`${API_BASE}/m/protocolo/${token}/mensagem`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados),
+    });
+    if (!r.ok) throw new Error((await r.json()).error || 'Erro');
+    return r.json();
+  },
+  encerrar: async (token: string) => {
+    const r = await fetch(`${API_BASE}/m/protocolo/${token}/encerrar`, { method: 'POST' });
+    if (!r.ok) throw new Error('Erro');
+    return r.json();
+  },
+};
+
+export const solicitacoesChat = {
+  mensagens: (reporteId: string) => request<any[]>(`/solicitacoes-chat/${reporteId}/mensagens`),
+  responder: (reporteId: string, texto: string, fotoUrl?: string) =>
+    post(`/solicitacoes-chat/${reporteId}/responder`, { texto, fotoUrl }),
+};
+
 export const revistas = {
   getByCondominio: (condominioId: string) => request<any>(`/revistas/${condominioId}`),
   updateCapa: (revistaId: string, data: any) => put(`/revistas/${revistaId}`, data),

@@ -8,12 +8,69 @@ import { compartilharConteudo, imprimirElemento, gerarPdfDeElemento } from '../.
 import { Search, Hash, AlertTriangle, Clock, Filter, Eye, Image, X } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useDemo } from '../../contexts/DemoContext';
-import { reportes as reportesApi } from '../../services/api';
+import { reportes as reportesApi, solicitacoesChat as chatApi } from '../../services/api';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import Pagination from '../../components/Common/Pagination';
 import { usePagination } from '../../hooks/usePagination';
 import WhatsAppShare from '../../components/Common/WhatsAppShare';
 import styles from './Reportes.module.css';
+
+// ───── Chat embutido no detalhe ─────
+const ChatPanel: React.FC<{ reporte: any }> = ({ reporte }) => {
+  const [msgs, setMsgs] = useState<any[]>([]);
+  const [texto, setTexto] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const carregar = () => chatApi.mensagens(reporte.id).then(setMsgs).catch(() => {});
+  useEffect(() => { if (reporte.id) carregar(); }, [reporte.id]);
+  const enviar = async () => {
+    if (!texto.trim()) return;
+    setEnviando(true);
+    try { await chatApi.responder(reporte.id, texto); setTexto(''); await carregar(); }
+    catch (e: any) { alert(e.message); }
+    finally { setEnviando(false); }
+  };
+  const whats = String(reporte.whatsappMorador || reporte.whatsapp_morador || '').replace(/\D/g, '');
+  const tokenLink = reporte.tokenPublico || reporte.token_publico;
+  const wppText = encodeURIComponent(`Olá ${reporte.nomeMorador || reporte.nome_morador || ''}! Sobre sua solicitação ${reporte.protocolo}: ${texto || '[responda em ' + (window.location.origin + '/c/' + tokenLink) + ']'}`);
+  const wppUrl = whats ? `https://wa.me/${whats.length <= 11 ? '55' + whats : whats}?text=${wppText}` : '';
+  return (
+    <div style={{ marginTop: 20, padding: 14, background: '#f8fafc', borderRadius: 12 }}>
+      <div style={{ fontWeight: 700, marginBottom: 10, color: '#0D47A1' }}>💬 Chat com o morador</div>
+      <div style={{ maxHeight: 240, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+        {msgs.length === 0 ? (
+          <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: 12 }}>Nenhuma mensagem ainda.</div>
+        ) : msgs.map(m => (
+          <div key={m.id} style={{
+            alignSelf: m.autor_tipo === 'sindico' ? 'flex-end' : 'flex-start',
+            background: m.autor_tipo === 'sindico' ? '#dbeafe' : '#fff',
+            border: m.autor_tipo === 'morador' ? '1px solid #e2e8f0' : 'none',
+            padding: '8px 12px', borderRadius: 12, maxWidth: '80%',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 2 }}>{m.autor_nome || m.autor_tipo}</div>
+            <div style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>{m.texto}</div>
+            <div style={{ fontSize: 10, color: '#64748b', marginTop: 2, textAlign: 'right' }}>{new Date(m.criado_em).toLocaleString('pt-BR')}</div>
+          </div>
+        ))}
+      </div>
+      <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="Responder ao morador..." style={{ width: '100%', padding: 10, border: '1.5px solid #cbd5e1', borderRadius: 8, minHeight: 60, fontFamily: 'inherit', fontSize: 14, boxSizing: 'border-box' }} />
+      <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+        <button onClick={enviar} disabled={enviando || !texto.trim()} style={{ background: 'linear-gradient(135deg,#1E88E5,#0D47A1)', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}>
+          {enviando ? 'Enviando...' : 'Enviar e gravar'}
+        </button>
+        {whats && (
+          <a href={wppUrl} target="_blank" rel="noopener noreferrer" style={{ background: 'linear-gradient(135deg,#25D366,#128C7E)', color: '#fff', padding: '10px 16px', borderRadius: 8, fontWeight: 700, textDecoration: 'none' }}>
+            📲 Enviar pelo WhatsApp
+          </a>
+        )}
+        {tokenLink && (
+          <a href={`/c/${tokenLink}`} target="_blank" rel="noopener noreferrer" style={{ background: '#f1f5f9', color: '#475569', padding: '10px 16px', borderRadius: 8, fontWeight: 600, textDecoration: 'none' }}>
+            🔗 Link público
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
 
 interface Reporte {
   id: string;
@@ -384,6 +441,8 @@ const ReportesPage: React.FC = () => {
                 </div>
               </div>
             )}
+
+            <ChatPanel reporte={detalheModal as any} />
           </div>
         )}
       </Modal>

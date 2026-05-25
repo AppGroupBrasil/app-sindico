@@ -38,6 +38,8 @@ import ComunicadosPage from './pages/Comunicados/ComunicadosPage';
 import QuadroAtividadesPage from './pages/QuadroAtividades/QuadroAtividadesPage';
 import DemoEntryPage from './pages/Demo/DemoEntryPage';
 import DemoShowcasePage from './pages/Demo/DemoShowcasePage';
+import CentralMoradorPage from './pages/CentralMorador/CentralMoradorPage';
+import AcompanharSolicitacaoPage from './pages/CentralMorador/AcompanharSolicitacaoPage';
 import CadastroPage from './pages/Auth/CadastroPage';
 import EsqueciSenhaPage from './pages/Auth/EsqueciSenhaPage';
 import PerfilPage from './pages/Perfil/PerfilPage';
@@ -137,6 +139,8 @@ const App: React.FC = () => {
       <Route path="/demo/:perfil" element={<DemoEntryPage />} />
       <Route path="/demo" element={<DemoShowcasePage />} />
       <Route path="/r/:slug" element={<RevistaPage />} />
+      <Route path="/m/:slug" element={<CentralMoradorPage />} />
+      <Route path="/c/:token" element={<AcompanharSolicitacaoPage />} />
 
       {/* Portal do Morador */}
       <Route path="/portal/login" element={

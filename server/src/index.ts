@@ -59,6 +59,8 @@ import exportRoutes from './routes/export.js';
 
 import contratosRoutes from './routes/contratos.js';
 import revistasRoutes, { publicRouter as revistasPublicRouter } from './routes/revistas.js';
+import centralMoradorRoutes from './routes/centralMorador.js';
+import solicitacoesChatRoutes from './routes/solicitacoesChat.js';
 
 import { iniciarScheduler } from './scheduler.js';
 import { initSocket } from './socket.js';
@@ -129,6 +131,7 @@ app.use('/api', (_req, res, next) => {
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/portal', authLimiter, portalMoradorRoutes);
 app.use('/api/revistas-publica', revistasPublicRouter);
+app.use('/api/m', centralMoradorRoutes);
 
 // ── Rotas protegidas ──
 const protectedRouter = express.Router();
@@ -190,6 +193,7 @@ protectedRouter.use('/export', exportRoutes);
 
 protectedRouter.use('/contratos', contratosRoutes);
 protectedRouter.use('/revistas', revistasRoutes);
+protectedRouter.use('/solicitacoes-chat', solicitacoesChatRoutes);
 
 
 // ── Health check (before auth middleware) ──

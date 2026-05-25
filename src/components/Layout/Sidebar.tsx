@@ -158,14 +158,12 @@ const Sidebar: React.FC = () => {
   }, [ordemIds, roleNivel, podeVer]);
 
   // Items visíveis (exclui ocultos quando NÃO está editando visibilidade)
+  // Sidebar sempre mostra TODOS os itens — toggle simples/completo vive na /inicio
   const visibleItems = useMemo(() => {
-    let base = filteredItems;
-    if (modoMenu === 'simples' && !editandoVisibilidade) {
-      base = base.filter(item => item.simples);
-    }
+    const base = filteredItems;
     if (editandoVisibilidade) return base;
     return base.filter(item => !ocultosIds.has(item.id));
-  }, [filteredItems, ocultosIds, editandoVisibilidade, modoMenu]);
+  }, [filteredItems, ocultosIds, editandoVisibilidade]);
 
   const favoritoItems = useMemo(() => {
     return visibleItems.filter(item => favoritosIds.has(item.id) && !ocultosIds.has(item.id));
@@ -319,30 +317,6 @@ const Sidebar: React.FC = () => {
         )}
 
         <nav className={styles.nav}>
-          {!collapsed && (
-            <div className={styles.modoMenuBar} style={{ position: 'relative' }}>
-              <button
-                className={`${styles.modoMenuBtn} ${modoMenu === 'simples' ? styles.modoMenuBtnAtivo : ''}`}
-                onClick={() => trocarModo('simples')}
-                title="Mostrar apenas as funções principais"
-              >
-                Menu Simples
-              </button>
-              <button
-                className={`${styles.modoMenuBtn} ${modoMenu === 'completo' ? styles.modoMenuBtnAtivo : ''}`}
-                onClick={() => trocarModo('completo')}
-                title="Mostrar todas as funções"
-              >
-                Menu Completo
-              </button>
-              <Coachmark
-                id="sidebar-modo-menu"
-                mensagem={<><strong>Menu Simples</strong> mostra só as funções essenciais do dia a dia. <strong>Menu Completo</strong> exibe todas as funções do sistema. Alterne quando quiser.</>}
-                posicao="abaixo"
-                alinhamento="centro"
-              />
-            </div>
-          )}
           {!collapsed && (
             <div className={styles.reorderBar}>
               <button

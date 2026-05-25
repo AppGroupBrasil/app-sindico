@@ -503,12 +503,16 @@
   height: 44px;
   border-radius: 12px;
   border: none;
-  background: var(--cor-superficie);
+  background: linear-gradient(135deg, #1E88E5, #0D47A1);
   box-shadow: var(--sombra-card);
-  color: var(--cor-texto);
+  color: #fff;
   cursor: pointer;
   align-items: center;
   justify-content: center;
+}
+
+.mobileToggle:hover {
+  filter: brightness(1.1);
 }
 
 .mobileHomeBtn {

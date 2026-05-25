@@ -41,25 +41,26 @@
 
 .userRole {
   font-size: 13px;
-  color: #6b7280;
+  color: #334155;
 }
 
 .modoTabs {
   display: inline-flex;
-  background: #f1f5f9;
+  background: #e3f2fd;
   padding: 6px;
   border-radius: 14px;
   margin-bottom: 20px;
   gap: 4px;
+  border: 1px solid #bbdefb;
 }
 
 .modoTab {
   padding: 10px 18px;
   border: none;
   background: transparent;
-  color: #475569;
+  color: #0D47A1;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
@@ -68,9 +69,9 @@
 }
 
 .modoTab.active {
-  background: #ff9800;
+  background: linear-gradient(135deg, #1E88E5, #0D47A1);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(13, 71, 161, 0.3);
 }
 
 .grid {
@@ -148,7 +149,7 @@
 .empty {
   text-align: center;
   padding: 40px 20px;
-  color: #6b7280;
+  color: #334155;
   font-size: 15px;
 }
 

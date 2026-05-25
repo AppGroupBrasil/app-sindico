@@ -202,9 +202,30 @@ const HomePage: React.FC = () => {
             <p className={styles.heroDesc}>
               Os moradores sabem o que você faz pelo condomínio? Não basta fazer — mostre tudo o que você realiza!
             </p>
-            <p className={styles.heroDescLight}>
-              Desenvolvemos, sem nenhum custo adicional, funções sob medida de acordo com a sua necessidade.
-            </p>
+            <div style={{
+              margin: '18px 0 24px',
+              padding: '20px 26px',
+              background: 'linear-gradient(135deg, rgba(251,191,36,0.18), rgba(217,119,6,0.12))',
+              border: '2px solid #fbbf24',
+              borderRadius: 18,
+              boxShadow: '0 10px 28px rgba(217,119,6,0.18)',
+              position: 'relative',
+            }}>
+              <div style={{
+                position: 'absolute', top: -12, left: 22,
+                background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                color: '#422006', padding: '4px 14px', borderRadius: 999,
+                fontSize: 11, fontWeight: 900, letterSpacing: 0.5, textTransform: 'uppercase',
+              }}>
+                ⭐ Diferencial exclusivo
+              </div>
+              <p style={{
+                margin: 0, fontSize: 20, fontWeight: 700, lineHeight: 1.4,
+                color: '#1e293b',
+              }}>
+                Desenvolvemos, <span style={{ color: '#d97706', fontWeight: 900 }}>sem nenhum custo adicional</span>, funções <span style={{ color: '#d97706', fontWeight: 900 }}>sob medida</span> de acordo com a sua necessidade.
+              </p>
+            </div>
             <div className={styles.heroCtas}>
               <button onClick={() => navigate('/demo')} className={styles.btnPrimaryLg}>
                 Ver Demo

@@ -191,7 +191,7 @@ const App: React.FC = () => {
         <Route path="perfil" element={<PerfilPage />} />
         <Route path="notificacoes" element={<NotificacoesPage />} />
 
-        <Route path="configuracoes" element={<ConfiguracoesPage />} />
+        <Route path="configuracoes" element={<RoleGuard minRole={4}><ConfiguracoesPage /></RoleGuard>} />
         <Route path="equipamentos" element={<RoleGuard minRole={2}><EquipamentosPage /></RoleGuard>} />
         <Route path="fornecedores" element={<RoleGuard minRole={2}><FornecedoresPage /></RoleGuard>} />
         <Route path="planos-manutencao" element={<RoleGuard minRole={2}><PlanosManutencaoPage /></RoleGuard>} />

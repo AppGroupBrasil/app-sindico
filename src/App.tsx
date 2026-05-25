@@ -149,7 +149,8 @@ const App: React.FC = () => {
         </ProtectedRoute>
       }>
         <Route path="inicio" element={<HomeAppPage />} />
-        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="dashboard" element={<Navigate to="/inicio" replace />} />
+        <Route path="painel-analitico" element={<DashboardPage />} />
         <Route path="condominios" element={<RoleGuard minRole={2}><CondominiosPage /></RoleGuard>} />
         <Route path="usuarios" element={<RoleGuard minRole={3}><UsuariosPage /></RoleGuard>} />
         <Route path="ordens-servico" element={<OrdensServicoPage />} />

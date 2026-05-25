@@ -165,6 +165,13 @@ const PainelRevistaPage: React.FC = () => {
             >
               <Plus size={16} style={{ verticalAlign: -3, marginRight: 6 }} /> Adicionar nova página
             </button>
+            <button
+              className={styles.publishBtn}
+              style={{ background: 'linear-gradient(135deg, #6366F1, #4338CA)' }}
+              onClick={() => window.open('/revista/visualizar', '_blank')}
+            >
+              <Eye size={16} style={{ verticalAlign: -3, marginRight: 6 }} /> Visualizar
+            </button>
             <button className={`${styles.publishBtn} ${revista.publicada ? styles.published : ''}`} onClick={publicar}>
               <Eye size={16} style={{ verticalAlign: -3, marginRight: 6 }} />
               {revista.publicada ? 'Despublicar' : 'Publicar revista'}

@@ -168,6 +168,34 @@ const LoginPage: React.FC = () => {
             <Link to="/cadastro" className={styles.registerLink}>Criar conta</Link>
           </div>
 
+          <div style={{ marginTop: 20 }}>
+            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10, textAlign: 'center' }}>
+              Acessos personalizados
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+              {[
+                { label: 'Portal do Morador', to: '/portal/login' },
+                { label: 'Portal do Síndico', to: '/login' },
+                { label: 'Portal da Administradora', to: '/login' },
+                { label: 'Portal do Funcionário', to: '/login' },
+              ].map(c => (
+                <Link
+                  key={c.label}
+                  to={c.to}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    padding: '12px 10px', borderRadius: 10,
+                    background: 'linear-gradient(135deg, #3b4cca, #2d3aa0)',
+                    color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 13, lineHeight: 1.15,
+                    textAlign: 'center', boxShadow: '0 4px 12px rgba(45,58,160,0.25)',
+                  }}
+                >
+                  ✓ {c.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
           <button className={styles.supportBtn} onClick={abrirSuporte}>
             <MessageCircle size={18} />
             <span>Suporte</span>

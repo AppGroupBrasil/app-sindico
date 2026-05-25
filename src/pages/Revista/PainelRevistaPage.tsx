@@ -111,7 +111,7 @@ export default function PainelRevistaPage() {
 
   return (
     <div className="revista-root min-h-screen bg-[#F8FAFC]">
-      <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-[#E2E8F0]">
+      <div className="fixed top-0 left-0 md:left-[260px] right-0 z-40 bg-white border-b border-[#E2E8F0]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center gap-3">

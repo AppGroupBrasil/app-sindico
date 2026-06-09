@@ -318,4 +318,79 @@ router.post('/reset-password', async (req, res: Response) => {
   res.json({ message: 'Senha redefinida com sucesso! Você já pode fazer login.' });
 });
 
+// POST /api/auth/sso — login via token assinado pela central (auth-central)
+// Verifica o HMAC do token, acha/cria o usuário local por e-mail e emite o JWT próprio.
+const SSO_SECRET = process.env.SSO_SECRET || process.env.JWT_SECRET || '';
+const SSO_AUD = 'app-sindico';
+
+function verificarTokenCentral(token: string): any {
+  const partes = token.split('.');
+  if (partes.length !== 3) throw new Error('formato inválido');
+  const [h, p, sig] = partes;
+  const esperado = crypto.createHmac('sha256', SSO_SECRET).update(`${h}.${p}`).digest('base64url');
+  const a = Buffer.from(sig); const b = Buffer.from(esperado);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) throw new Error('assinatura inválida');
+  const payload = JSON.parse(Buffer.from(p, 'base64url').toString());
+  if (payload.iss !== 'auth-central') throw new Error('emissor inválido');
+  if (payload.aud && payload.aud !== SSO_AUD) throw new Error('destino inválido');
+  if (typeof payload.exp === 'number' && payload.exp < Math.floor(Date.now() / 1000)) throw new Error('token expirado');
+  return payload;
+}
+
+const PERFIL_PARA_ROLE: Record<string, string> = {
+  gestor: 'administrador',
+  funcionario: 'funcionario',
+  morador: 'funcionario',
+};
+
+router.post('/sso', async (req, res: Response) => {
+  try {
+    const token = req.body?.token;
+    if (!token) { res.status(400).json({ error: 'Token ausente' }); return; }
+    if (!SSO_SECRET) { res.status(500).json({ error: 'SSO não configurado' }); return; }
+
+    const payload = verificarTokenCentral(token);
+    const email = String(payload.email || '').toLowerCase().trim();
+    if (!email) { res.status(400).json({ error: 'Token sem e-mail' }); return; }
+
+    let user = await queryOne<any>('SELECT * FROM usuarios WHERE lower(email) = $1', [email]);
+
+    if (!user) {
+      const role = PERFIL_PARA_ROLE[payload.perfil] || 'funcionario';
+      const senhaHash = await bcrypt.hash(crypto.randomBytes(24).toString('hex'), 12);
+      user = await queryOne<any>(
+        `INSERT INTO usuarios (email, senha_hash, nome, role, criado_por, condominio_id)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+        [email, senhaHash, payload.nome || email, role, 'sso-central', payload.condominio_id || null],
+      );
+    }
+
+    if (!user.ativo || user.bloqueado) {
+      res.status(403).json({ error: 'Conta desativada ou bloqueada', motivo: user.motivo_bloqueio });
+      return;
+    }
+
+    await auditLog({ id: user.id, nome: user.nome, role: user.role } as any, 'login_sso', 'usuarios', user.id, { via: 'auth-central' }, '').catch(() => {});
+
+    const jwtLocal = generateToken({ userId: user.id, email: user.email, role: user.role });
+
+    res.json({
+      token: jwtLocal,
+      user: {
+        id: user.id,
+        email: user.email,
+        nome: user.nome,
+        role: user.role,
+        administradorId: user.administrador_id,
+        supervisorId: user.supervisor_id,
+        condominioId: user.condominio_id,
+        avatarUrl: user.avatar_url,
+      },
+    });
+  } catch (err: any) {
+    console.error('[SSO ERROR]', err?.message);
+    res.status(401).json({ error: 'Token SSO inválido ou expirado' });
+  }
+});
+
 export default router;

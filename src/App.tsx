@@ -42,6 +42,7 @@ import CentralMoradorPage from './pages/CentralMorador/CentralMoradorPage';
 import AcompanharSolicitacaoPage from './pages/CentralMorador/AcompanharSolicitacaoPage';
 import CadastroPage from './pages/Auth/CadastroPage';
 import EsqueciSenhaPage from './pages/Auth/EsqueciSenhaPage';
+import SsoPage from './pages/Auth/SsoPage';
 import PerfilPage from './pages/Perfil/PerfilPage';
 import NotificacoesPage from './pages/Notificacoes/NotificacoesPage';
 
@@ -136,6 +137,7 @@ const App: React.FC = () => {
       <Route path="/bloqueado" element={<BloqueadoPage />} />
       <Route path="/cadastro" element={<CadastroPage />} />
       <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
+      <Route path="/sso" element={<SsoPage />} />
       <Route path="/demo/:perfil" element={<DemoEntryPage />} />
       <Route path="/demo" element={<DemoShowcasePage />} />
       <Route path="/r/:slug" element={<RevistaPage />} />

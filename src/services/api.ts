@@ -146,6 +146,11 @@ export const auth = {
   register: (data: { email: string; senha: string; nome: string; role: string; condominioId?: string; supervisorId?: string }) =>
     post('/auth/register', data),
   me: () => request('/auth/me'),
+  sso: (token: string) =>
+    request<{ token: string; user: any }>('/auth/sso', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    }),
   changePassword: (senhaAtual: string, novaSenha: string) =>
     post('/auth/change-password', { senhaAtual, novaSenha }),
   selfRegister: (data: { email: string; senha: string; nome: string; telefone?: string }) =>

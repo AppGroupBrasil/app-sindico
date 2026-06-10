@@ -361,7 +361,7 @@ router.post('/sso', async (req, res: Response) => {
       user = await queryOne<any>(
         `INSERT INTO usuarios (email, senha_hash, nome, role, criado_por, condominio_id)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-        [email, senhaHash, payload.nome || email, role, 'sso-central', payload.condominio_id || null],
+        [email, senhaHash, payload.nome || email, role, null, payload.condominio_id || null],
       );
     }
 

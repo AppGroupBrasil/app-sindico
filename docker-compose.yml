@@ -17,6 +17,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD env var is required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET env var is required}
       SSO_SECRET: ${SSO_SECRET:-}
+      SSO_PUBLIC_KEY: ${SSO_PUBLIC_KEY:-}
+      SSO_PUBLIC_KEY_B64: ${SSO_PUBLIC_KEY_B64:-}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2h}
       CORS_ORIGIN: https://appsindico.com.br
       FRONTEND_URL: https://appsindico.com.br

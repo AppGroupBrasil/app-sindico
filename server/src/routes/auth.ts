@@ -323,13 +323,22 @@ router.post('/reset-password', async (req, res: Response) => {
 const SSO_SECRET = process.env.SSO_SECRET || process.env.JWT_SECRET || '';
 const SSO_AUD = 'app-sindico';
 
+const SSO_PUBLIC_KEY = process.env.SSO_PUBLIC_KEY_B64 ? Buffer.from(process.env.SSO_PUBLIC_KEY_B64, 'base64').toString('utf-8').trim() : (process.env.SSO_PUBLIC_KEY || '').trim();
+
 function verificarTokenCentral(token: string): any {
   const partes = token.split('.');
   if (partes.length !== 3) throw new Error('formato inválido');
   const [h, p, sig] = partes;
-  const esperado = crypto.createHmac('sha256', SSO_SECRET).update(`${h}.${p}`).digest('base64url');
-  const a = Buffer.from(sig); const b = Buffer.from(esperado);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) throw new Error('assinatura inválida');
+  const header = JSON.parse(Buffer.from(h, 'base64url').toString());
+  if (header.alg === 'RS256') {
+    if (!SSO_PUBLIC_KEY) throw new Error('SSO_PUBLIC_KEY ausente');
+    const ok = crypto.createVerify('RSA-SHA256').update(`${h}.${p}`).verify(SSO_PUBLIC_KEY, sig, 'base64url');
+    if (!ok) throw new Error('assinatura RS256 inválida');
+  } else {
+    const esperado = crypto.createHmac('sha256', SSO_SECRET).update(`${h}.${p}`).digest('base64url');
+    const a = Buffer.from(sig); const b = Buffer.from(esperado);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) throw new Error('assinatura inválida');
+  }
   const payload = JSON.parse(Buffer.from(p, 'base64url').toString());
   if (payload.iss !== 'auth-central') throw new Error('emissor inválido');
   if (payload.aud && payload.aud !== SSO_AUD) throw new Error('destino inválido');
@@ -347,7 +356,7 @@ router.post('/sso', async (req, res: Response) => {
   try {
     const token = req.body?.token;
     if (!token) { res.status(400).json({ error: 'Token ausente' }); return; }
-    if (!SSO_SECRET) { res.status(500).json({ error: 'SSO não configurado' }); return; }
+    if (!SSO_SECRET && !SSO_PUBLIC_KEY) { res.status(500).json({ error: 'SSO não configurado' }); return; }
 
     const payload = verificarTokenCentral(token);
     const email = String(payload.email || '').toLowerCase().trim();

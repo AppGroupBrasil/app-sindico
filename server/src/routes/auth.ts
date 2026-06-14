@@ -370,8 +370,20 @@ router.post('/sso', async (req, res: Response) => {
       user = await queryOne<any>(
         `INSERT INTO usuarios (email, senha_hash, nome, role, criado_por, condominio_id)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-        [email, senhaHash, payload.nome || email, role, null, payload.condominio_id || null],
+        [email, senhaHash, payload.nome || email, role, null, null],
       );
+    }
+
+    if (payload.condominio_id && !user.condominio_id) {
+      await query(
+        `INSERT INTO condominios (id, nome, criado_por) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`,
+        [payload.condominio_id, payload.condominio_nome || 'Condominio', user.id],
+      );
+      const upd = await queryOne<any>(
+        `UPDATE usuarios SET condominio_id = $1 WHERE id = $2 RETURNING *`,
+        [payload.condominio_id, user.id],
+      );
+      if (upd) user = upd;
     }
 
     if (!user.ativo || user.bloqueado) {

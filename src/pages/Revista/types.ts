@@ -112,7 +112,12 @@ export type CategoryId =
   | 'agendamento-reformas'
   | 'gestao-funcionarios'
   | 'equipe-em-acao'
-  | 'moradores-atendidos';
+  | 'moradores-atendidos'
+  | 'recado-sindico'
+  | 'obras-manutencao'
+  | 'nossa-equipe'
+  | 'enquetes-avaliacoes'
+  | 'mural-recados';
 
 export interface Category {
   id: CategoryId;

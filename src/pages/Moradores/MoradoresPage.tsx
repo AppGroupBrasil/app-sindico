@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import HowItWorks from '../../components/Common/HowItWorks';
 import PageHeader from '../../components/Common/PageHeader';
 import Card from '../../components/Common/Card';
@@ -141,18 +141,49 @@ const MoradoresPage: React.FC = () => {
     if (!file) return;
 
     const extensao = file.name.split('.').pop()?.toLowerCase();
-    if (!['xlsx', 'xls', 'csv'].includes(extensao || '')) {
-      setImportErro('Formato não suportado. Use .xlsx, .xls ou .csv');
+    if (!['xlsx', 'csv'].includes(extensao || '')) {
+      setImportErro('Formato não suportado. Use .xlsx ou .csv');
       return;
     }
 
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
-        const data = new Uint8Array(ev.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' });
+        const buffer = ev.target?.result as ArrayBuffer;
+        const json: Record<string, unknown>[] = [];
+        if (extensao === 'csv') {
+          const text = new TextDecoder('utf-8').decode(buffer);
+          const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+          if (lines.length > 0) {
+            const sep = (lines[0].match(/;/g) || []).length > (lines[0].match(/,/g) || []).length ? ';' : ',';
+            const parseLine = (l: string) => l.split(sep).map(c => c.replace(/^"|"$/g, '').trim());
+            const headers = parseLine(lines[0]);
+            for (const line of lines.slice(1)) {
+              const cells = parseLine(line);
+              const obj: Record<string, unknown> = {};
+              headers.forEach((h, i) => { if (h) obj[h] = cells[i] ?? ''; });
+              json.push(obj);
+            }
+          }
+        } else {
+          const wb = new ExcelJS.Workbook();
+          await wb.xlsx.load(buffer);
+          const sheet = wb.worksheets[0];
+          const headers: string[] = [];
+          sheet?.getRow(1).eachCell({ includeEmpty: true }, (cell, col) => {
+            headers[col - 1] = String(cell.value ?? '').trim();
+          });
+          sheet?.eachRow((row, num) => {
+            if (num === 1) return;
+            const obj: Record<string, unknown> = {};
+            headers.forEach((h, i) => {
+              if (!h) return;
+              const v = row.getCell(i + 1).value;
+              obj[h] = v == null ? '' : typeof v === 'object' && 'text' in (v as object) ? (v as { text: string }).text : v;
+            });
+            json.push(obj);
+          });
+        }
 
         if (json.length === 0) {
           setImportErro('A planilha está vazia.');
@@ -230,14 +261,19 @@ const MoradoresPage: React.FC = () => {
   };
 
   /* Download template */
-  const baixarModelo = () => {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['Nome', 'Condomínio', 'Bloco', 'Apartamento', 'WhatsApp', 'E-mail', 'Perfil'],
-      ['João Silva', 'Condomínio Aurora', 'A', '101', '(11) 99999-0001', 'joao@email.com', 'Proprietário'],
-    ]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Moradores');
-    XLSX.writeFile(wb, 'modelo_moradores.xlsx');
+  const baixarModelo = async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Moradores');
+    ws.addRow(['Nome', 'Condomínio', 'Bloco', 'Apartamento', 'WhatsApp', 'E-mail', 'Perfil']);
+    ws.addRow(['João Silva', 'Condomínio Aurora', 'A', '101', '(11) 99999-0001', 'joao@email.com', 'Proprietário']);
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'modelo_moradores.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   /* Resumo por condomínio */

@@ -82,7 +82,9 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
-      connectSrc: ["'self'", 'https:', 'wss:'],
+      connectSrc: process.env.CSP_CONNECT_SRC
+        ? ["'self'", ...process.env.CSP_CONNECT_SRC.split(',').map(s => s.trim())]
+        : ["'self'", 'https:', 'wss:'],
     },
   },
   crossOriginEmbedderPolicy: false,

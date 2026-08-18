@@ -14,7 +14,7 @@
   border-right: 1px solid var(--cor-borda);
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: 0 0 var(--safe-bottom);
   position: fixed;
   top: 0;
   left: 0;

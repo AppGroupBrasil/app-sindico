@@ -30,6 +30,7 @@
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--lp-borda);
+  padding-top: var(--safe-top);
 }
 
 .navContainer {
@@ -848,7 +849,7 @@
 
 .whatsappBtn {
   position: fixed;
-  bottom: 100px;
+  bottom: calc(100px + var(--safe-bottom));
   right: 24px;
   width: 60px;
   height: 60px;

@@ -25,11 +25,11 @@
 @media (max-width: 768px) {
   .main {
     margin-left: 0;
-    padding: 72px 16px 24px;
+    padding: 72px 16px calc(24px + var(--safe-bottom));
   }
 
   .mainTopBar {
-    padding: 72px 16px 24px;
+    padding: 72px 16px calc(24px + var(--safe-bottom));
   }
 }
 

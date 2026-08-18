@@ -2270,7 +2270,7 @@
 /* ── Toast de feedback ── */
 .toast {
   position: fixed;
-  bottom: 28px;
+  bottom: calc(28px + var(--safe-bottom));
   right: 28px;
   background: var(--cor-superficie);
   color: var(--cor-texto);

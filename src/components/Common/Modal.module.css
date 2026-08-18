@@ -80,6 +80,7 @@
   .overlay {
     padding: 12px;
     align-items: flex-end;
+    padding-bottom: calc(12px + var(--safe-bottom));
   }
 
   .modal {

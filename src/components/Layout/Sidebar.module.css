@@ -10,6 +10,7 @@
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   box-shadow: 2px 0 16px rgba(0, 0, 0, 0.15);
+  padding-bottom: var(--safe-bottom);
 }
 
 .collapsed {
